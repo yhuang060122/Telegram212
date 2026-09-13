@@ -1,0 +1,237 @@
+{
+  "portfolio_evaluation": {
+    "overall_sentiment": "Mixed, with targeted opportunities and risk reductions identified. The portfolio has a significant cash position, allowing for strategic reallocations.",
+    "macro_impact": "The high US 10Y yield (4.95%) and Fed Rate (3.63%) suggest a higher discount rate environment, which can put pressure on growth stock valuations, particularly those with long-duration cash flows. The strong DXY (118.0732) could also impact EUR-denominated returns for USD assets, though FX impact is already noted in individual positions. Moderate VIX (17.84) indicates no extreme market fear, allowing for selective adjustments.",
+    "cash_strategy": "With a 28.97% cash ratio, there is ample liquidity to act on 'Buy' recommendations and potentially increase positions in high-conviction AI plays, or to maintain a cautious stance given macro uncertainties and specific stock risks.",
+    "positions_ratings": [
+      {
+        "ticker": "MSFT_US_EQ",
+        "name": "Microsoft",
+        "rating": "Hold",
+        "rationale": "Strong performance (+24.13%) and positive news regarding its cloud business backlog ($678 billion) suggest continued robust fundamentals. However, no immediate new catalyst for a 'Buy' and no explicit valuation data to suggest it's 'attractive' for further accumulation at this point. Fundamentals are intact."
+      },
+      {
+        "ticker": "ORCL_US_EQ",
+        "name": "Oracle",
+        "rating": "Buy",
+        "rationale": "Despite recent underperformance (-4.79%), news indicates Oracle is 'undervalued' with surging cloud infrastructure and AI demand. The high 97.9% utilization of its AI chips last quarter is a strong positive catalyst, demonstrating robust demand for its AI offerings. This presents an attractive entry point."
+      },
+      {
+        "ticker": "CRCL_US_EQ",
+        "name": "Circle Internet Group",
+        "rating": "Hold",
+        "rationale": "Underperforming slightly (-3.21%), but no specific news or catalysts (positive or negative) are provided to warrant immediate action. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "BMNR_US_EQ",
+        "name": "BitMine Immersion Technologies",
+        "rating": "Hold",
+        "rationale": "Performing well (+9.28%), but no specific news or catalysts are provided. Fundamentals are assumed intact, no immediate action needed."
+      },
+      {
+        "ticker": "TSLA_US_EQ",
+        "name": "Tesla",
+        "rating": "Reduce",
+        "rationale": "Increased competition in the robotaxi market from Amazon's Zoox and regulatory friction in the UK over driverless car rules are negative catalysts. These factors increase risk and could impact future growth prospects, making the current valuation potentially stretched."
+      },
+      {
+        "ticker": "ARM_US_EQ",
+        "name": "ARM",
+        "rating": "Buy",
+        "rationale": "Underperforming (-4.41%), but recent analyst coverage from Piper Sandler initiated with an 'overweight' rating and sees significant upside (19% to 37%). This positive analyst sentiment and potential undervaluation serve as a strong catalyst."
+      },
+      {
+        "ticker": "NOW_US_EQ",
+        "name": "ServiceNow",
+        "rating": "Reduce",
+        "rationale": "Exceptional performance (+44.45%) suggests valuation may be stretched. Recent news highlights fears that general AI agents like GPT-6 Astra could compete with specialist software, posing a negative catalyst and increasing risk for SaaS companies like ServiceNow."
+      },
+      {
+        "ticker": "MSTR_US_EQ",
+        "name": "Strategy (MicroStrategy)",
+        "rating": "Reduce",
+        "rationale": "Significant underperformance (-21.53%) and a highly concerning news report warning of a '93% crash' for Bitcoin, which is the primary asset underlying MicroStrategy's valuation. This represents a severe negative catalyst and significantly increased risk."
+      },
+      {
+        "ticker": "GNPK_US_EQ",
+        "name": "Redwire",
+        "rating": "Hold",
+        "rationale": "Significant underperformance (-25.14%), but no specific news or catalysts are provided. Without further information, fundamentals are assumed intact, but warrants close monitoring."
+      },
+      {
+        "ticker": "DRAMd_EQ",
+        "name": "Defiance Memory (Acc)",
+        "rating": "Hold",
+        "rationale": "Slightly underperforming (-2.44%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "NOK_US_EQ",
+        "name": "Nokia",
+        "rating": "Hold",
+        "rationale": "Underperforming (-12.41%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "XE_US_EQ",
+        "name": "X-Energy",
+        "rating": "Hold",
+        "rationale": "Underperforming (-10.32%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "IREN_US_EQ",
+        "name": "IREN",
+        "rating": "Hold",
+        "rationale": "Performing well (+8.55%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "SV_US_EQ",
+        "name": "NuScale Power",
+        "rating": "Hold",
+        "rationale": "Significant underperformance (-17.94%), but no specific news or catalysts are provided. Fundamentals are assumed intact, but warrants close monitoring."
+      },
+      {
+        "ticker": "VACQ_US_EQ",
+        "name": "Rocket Lab",
+        "rating": "Hold",
+        "rationale": "Underperforming (-6.08%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "BMRG_US_EQ",
+        "name": "Eos Energy Enterprises",
+        "rating": "Hold",
+        "rationale": "Significant underperformance (-27.0%), but no specific news or catalysts are provided. Fundamentals are assumed intact, but warrants close monitoring."
+      },
+      {
+        "ticker": "NET_US_EQ",
+        "name": "Cloudflare",
+        "rating": "Hold",
+        "rationale": "Exceptional performance (+64.07%) indicates strong market confidence. While valuation might be stretched, no new negative catalysts are present, and fundamentals are likely intact. No immediate action."
+      },
+      {
+        "ticker": "2DGd_EQ",
+        "name": "Sivers Semiconductors",
+        "rating": "Hold",
+        "rationale": "Significant underperformance (-22.94%), but no specific news or catalysts are provided. Fundamentals are assumed intact, but warrants close monitoring."
+      },
+      {
+        "ticker": "VST_US_EQ",
+        "name": "Vistra",
+        "rating": "Hold",
+        "rationale": "Performing well (+6.19%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "HPE_US_EQ",
+        "name": "Hewlett Packard Enterprise",
+        "rating": "Hold",
+        "rationale": "Strong performance (+28.11%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "NPA_US_EQ",
+        "name": "AST SpaceMobile",
+        "rating": "Hold",
+        "rationale": "Underperforming (-10.92%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "MRVL_US_EQ",
+        "name": "Marvell Technology",
+        "rating": "Buy",
+        "rationale": "Performing well (+16.37%) and recent analyst coverage from Piper Sandler initiated with an 'overweight' rating, seeing significant upside (19% to 37%). This positive analyst sentiment serves as a strong catalyst."
+      },
+      {
+        "ticker": "LOKB_US_EQ",
+        "name": "Navitas Semiconductor",
+        "rating": "Hold",
+        "rationale": "Extreme underperformance (-51.77%). While concerning, no specific news or catalysts are provided to explain the drop or suggest a definitive 'Reduce'. Requires deeper investigation, but for now, fundamentals are assumed intact for a 'Hold'."
+      },
+      {
+        "ticker": "FIG_US_EQ",
+        "name": "Figma",
+        "rating": "Hold",
+        "rationale": "Strong performance (+31.73%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "NNNDd_EQ",
+        "name": "Tencent",
+        "rating": "Hold",
+        "rationale": "Underperforming (-4.04%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "INTC_US_EQ",
+        "name": "Intel",
+        "rating": "Hold",
+        "rationale": "Performing well (+10.7%), but the news provided is historical context rather than a forward-looking catalyst. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "AIRp_EQ",
+        "name": "Airbus",
+        "rating": "Hold",
+        "rationale": "Performing well (+6.91%), but no specific news or catalysts are provided. Fundamentals are assumed intact. (Note: Not an AI-centric stock, but part of the portfolio)."
+      },
+      {
+        "ticker": "CBRS_US_EQ",
+        "name": "Cerebras Systems",
+        "rating": "Hold",
+        "rationale": "Flat performance (+1.61%), and no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "QCOM_US_EQ",
+        "name": "Qualcomm",
+        "rating": "Hold",
+        "rationale": "Performing well (+4.65%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "AIPOl_EQ",
+        "name": "Defiance AI & Power Infrastructure (Acc)",
+        "rating": "Hold",
+        "rationale": "Slightly underperforming (-1.01%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "MRNA_US_EQ",
+        "name": "Moderna",
+        "rating": "Reduce",
+        "rationale": "Phenomenal performance (+490.6%). While impressive, such a significant run-up without any recent news or catalysts suggests valuation is extremely stretched and risk is elevated. Taking profits is prudent here."
+      },
+      {
+        "ticker": "ONDS_US_EQ",
+        "name": "Ondas",
+        "rating": "Hold",
+        "rationale": "Flat performance (+1.91%), and no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "GEHC_US_EQ",
+        "name": "GE HealthCare Technologies",
+        "rating": "Hold",
+        "rationale": "Performing well (+3.45%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "CCCX_US_EQ",
+        "name": "Infleqtion",
+        "rating": "Hold",
+        "rationale": "Underperforming (-5.87%), but no specific news or catalysts are provided. Fundamentals are assumed intact."
+      },
+      {
+        "ticker": "AMZN_US_EQ",
+        "name": "Amazon",
+        "rating": "Buy",
+        "rationale": "Positive news regarding its significant exposure to Anthropic (AI) and expansion of its Zoox robotaxi service provides strong catalysts. Despite its small portfolio weight, these developments are favorable."
+      },
+      {
+        "ticker": "HEIAa_EQ",
+        "name": "Heineken",
+        "rating": "Hold",
+        "rationale": "Performing well (+6.02%), but no specific news or catalysts are provided. Fundamentals are assumed intact. (Note: Not an AI-centric stock, but part of the portfolio)."
+      },
+      {
+        "ticker": "ORAp_EQ",
+        "name": "Orange",
+        "rating": "Hold",
+        "rationale": "Underperforming (-11.26%), but no specific news or catalysts are provided. Fundamentals are assumed intact. (Note: Not an AI-centric stock, but part of the portfolio)."
+      },
+      {
+        "ticker": "P911d_EQ",
+        "name": "Porsche",
+        "rating": "Hold",
+        "rationale": "Performing well (+13.7%), but no specific news or catalysts are provided. Fundamentals are assumed intact. (Note: Not an AI-centric stock, but part of the portfolio)."
+      }
+    ]
+  }
+}

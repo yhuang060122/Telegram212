@@ -1,2 +1,22 @@
 .venv
 .idea
+
+# 环境变量（含 T212 API Key / Secret，切勿提交）
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 测试缓存
+.pytest_cache/
+
+# 本地数据库（运行时生成，不入库）
+data/*.db
+data/*.db-journal
+
+# 工具目录
+.workbuddy/

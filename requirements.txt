@@ -1,0 +1,6 @@
+requests
+python-dotenv
+pytest
+pydantic
+openai
+google-genai
