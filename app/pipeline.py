@@ -6,9 +6,9 @@ from app.analyst import Analyst
 
 class DailyPipeline:
 
-    def __init__(self):
+    def __init__(self, db_path):
         self.client = Trading212Client()
-        self.db = Database()
+        self.db = Database(db_path)
         self.analyst = Analyst()
 
     def run(self):

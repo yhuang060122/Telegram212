@@ -7,9 +7,10 @@ class Database:
 
     def __init__(self, db_path="data/portfolio.db"):
 
-        Path("data").mkdir(exist_ok=True)
+        self.path = Path(db_path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
 
-        self.conn = sqlite3.connect(db_path)
+        self.conn = sqlite3.connect(self.path)
         self.conn.row_factory = sqlite3.Row
 
         self.create_tables()
