@@ -26,29 +26,24 @@ class Analyst:
             api_key=os.getenv("GEMINI_API_KEY")
         )
 
-    def analyze(self, context, history):
-
-        response = self.client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[
-                types.Content(
-                    role="user",
-                    parts=[
-                        types.Part.from_text(text=SYSTEM_PROMPT),
-                        types.Part.from_text(
-                            text=str({
-                                "context": context,
-                                "history": history
-                            })
-                        )
-                    ]
-                )
-            ],
+        self.chat = self.client.chats.create(
+            model="gemini-3.5-flash",
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema=Report,
                 temperature=0.2,
             ),
+        )
+
+    def analyze(self, context, history) -> Report:
+
+        payload = {
+            "context": context,
+            "history": history,
+        }
+
+        response = self.chat.send_message(
+            message=f"{SYSTEM_PROMPT}\n\n{json.dumps(payload, ensure_ascii=False, default=str)}"
         )
 
         return response.parsed
