@@ -256,3 +256,42 @@ class Formatter:
     /stock nvda - Analyze NVDA
     /history NVDA - 30-day history
     """
+
+    @staticmethod
+    def market_close(portfolio, report, history):
+
+        today = history[-1] if history else None
+        yesterday = history[-2] if len(history) >= 2 else None
+
+        daily_change = 0.0
+        daily_pct = 0.0
+
+        if today and yesterday:
+            daily_change = today["total_value"] - yesterday["total_value"]
+            daily_pct = daily_change / yesterday["total_value"] * 100
+
+        emoji = "🟢" if daily_change >= 0 else "🔴"
+
+        lines = [
+            "🌙 *Market Close Report*",
+            "",
+            f"**Portfolio Value:** €{portfolio.total_value:,.2f}",
+            f"**Today's Change:** {emoji} €{daily_change:+,.2f} ({daily_pct:+.2f}%)",
+            f"**Cash:** {portfolio.cash_ratio:.1f}%",
+            "",
+            "*Top Holdings*"
+        ]
+
+        for p in portfolio.top_positions()[:5]:
+            lines.append(
+                f"• {p['ticker'].replace('_US_EQ', '')}  {p['weight']:.1f}%"
+            )
+
+        if report is not None:
+            lines.extend([
+                "",
+                "*AI Closing View*",
+                report.portfolio_rating.summary
+            ])
+
+        return "\n".join(lines)
