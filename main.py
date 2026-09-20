@@ -12,7 +12,7 @@ def main():
 
     pipeline = DailyPipeline(DB_PATH)
 
-    portfolio, report = pipeline.run()
+    portfolio, report, history = pipeline.run()
 
     bot = TelegramBot()
 

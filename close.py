@@ -10,9 +10,7 @@ DB_PATH = os.getenv(
 
 pipeline = DailyPipeline(DB_PATH)
 
-portfolio, report = pipeline.run()
-
-history = pipeline.db.get_history(30)
+portfolio, report, history = pipeline.run()
 
 message = Formatter.market_close(
     portfolio=portfolio,

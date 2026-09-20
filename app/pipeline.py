@@ -22,18 +22,19 @@ class DailyPipeline:
         # 2. Research
         context = ResearchContext.build(portfolio)
 
-        # 3. Save history
+        # 3. Persist today's data
         self.db.save_snapshot(context["portfolio"])
         self.db.save_positions(context["portfolio"])
         self.db.save_news(context["news"])
         self.db.save_earnings(context["earnings"])
 
-        # 4. AI
-        history = self.db.get_history(30)
+        # 4. Load updated history
+        history = self.db.get_history(days=30)
 
+        # 5. AI analysis (graceful fallback)
         report = self.analyst.analyze(
             context=context,
             history=history
         )
 
-        return portfolio, report
+        return portfolio, report, history
