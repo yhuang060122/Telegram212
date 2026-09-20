@@ -3,9 +3,11 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 from app.schema import Report
+from pydantic import ValidationError
 import os
 import json
-
+import logging
+import time
 load_dotenv()
 
 SYSTEM_PROMPT = open(
@@ -13,7 +15,15 @@ SYSTEM_PROMPT = open(
     encoding="utf-8"
 ).read()
 
+logger = logging.getLogger(__name__)
+
 class Analyst:
+
+    MODELS = [
+        "gemini-3.7-flash",
+        "gemini-3.5-flash",
+        "gemini-3.5-flash-lite",
+    ]
 
     def __init__(self):
         api_key = os.getenv("GEMINI_API_KEY")
@@ -26,24 +36,45 @@ class Analyst:
             api_key=os.getenv("GEMINI_API_KEY")
         )
 
-        self.chat = self.client.chats.create(
-            model="gemini-3.5-flash",
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=Report,
-                temperature=0.2,
-            ),
-        )
-
-    def analyze(self, context, history) -> Report:
+    def analyze(self, context, history) -> Report | None:
 
         payload = {
             "context": context,
             "history": history,
         }
 
-        response = self.chat.send_message(
-            message=f"{SYSTEM_PROMPT}\n\n{json.dumps(payload, ensure_ascii=False, default=str)}"
-        )
+        for model in self.MODELS:
+            for attempt in range(2):
+                try:
+                    logger.info("Trying model: %s", model)
 
-        return response.parsed
+                    self.chat = self.client.chats.create(
+                        model=model,
+                        config=types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            response_schema=Report,
+                            temperature=0.2,
+                        ),
+                    )
+
+                    response = self.chat.send_message(
+                        message=f"{SYSTEM_PROMPT}\n\n{json.dumps(payload, ensure_ascii=False, default=str)}"
+                    )
+
+                    if response.parsed is None:
+                        raise ValueError("Empty structured response")
+
+                    logger.info("Model %s succeeded", model)
+                    return response.parsed
+
+                except (ValidationError, ValueError) as e:
+                    logger.warning("%s returned invalid JSON: %s", model, e)
+
+                except Exception as e:
+                    if attempt == 0:
+                        time.sleep(2)   # 等 2 秒再试一次
+                    else:
+                        logger.warning("%s failed twice", model)
+
+        logger.error("All Gemini models failed.")
+        return None

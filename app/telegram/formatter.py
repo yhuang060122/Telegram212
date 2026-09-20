@@ -5,6 +5,15 @@ class Formatter:
     @staticmethod
     def daily(portfolio, report):
 
+        if report is None:
+            return (
+                "📊 *Daily Portfolio Report*\n\n"
+                f"Portfolio: €{portfolio.total_value:,.0f}\n"
+                f"Cash: {portfolio.cash_ratio:.1f}%\n\n"
+                "⚠️ AI analysis is temporarily unavailable.\n"
+                "Market data and portfolio history were updated successfully."
+            )
+
         p = report.portfolio_rating
 
         emoji = {
