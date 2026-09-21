@@ -4,3 +4,5 @@ pytest
 pydantic
 openai
 google-genai
+pandas
+streamlit

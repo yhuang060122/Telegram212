@@ -37,4 +37,6 @@ class DailyPipeline:
             history=history
         )
 
+        self.db.save_report(report)
+
         return portfolio, report, history

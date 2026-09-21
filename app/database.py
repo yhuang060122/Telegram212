@@ -2,6 +2,7 @@ from pathlib import Path
 import sqlite3
 from .entities import Snapshot, PositionRecord
 from datetime import date
+from app.schema import Report
 
 class Database:
 
@@ -62,6 +63,11 @@ class Database:
             ticker TEXT,
             earnings_date TEXT,
             session TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS reports(
+            snapshot_date TEXT PRIMARY KEY,
+            json TEXT
         );
 
         """)
@@ -180,6 +186,20 @@ class Database:
                 n["session"]
             ))
 
+    def save_report(self, report):
+
+        self.conn.execute(
+            """
+            INSERT OR REPLACE INTO reports
+            VALUES (?, ?)
+            """,
+            (
+                date.today().isoformat(),
+                report.model_dump_json()
+            )
+        )
+
+        self.conn.commit()
 
     def get_history(self, days=30):
 
@@ -211,3 +231,100 @@ class Database:
         )
 
         return [dict(r) for r in cur.fetchall()]
+
+    def latest_snapshot(self):
+
+        cur = self.conn.execute(
+            """
+            SELECT *
+            FROM snapshots
+            ORDER BY snapshot_date DESC
+            LIMIT 1
+            """
+        )
+
+        row = cur.fetchone()
+
+        return dict(row) if row else None
+
+    def latest_positions(self):
+
+        cur = self.conn.execute(
+            """
+            SELECT *
+            FROM positions
+            WHERE snapshot_date = (
+                SELECT MAX(snapshot_date)
+                FROM positions
+            )
+            ORDER BY weight DESC
+            """
+        )
+
+        return [dict(r) for r in cur.fetchall()]
+
+    def today_news(self):
+
+        today = date.today().isoformat()
+
+        cur = self.conn.execute(
+            """
+            SELECT *
+            FROM news
+            WHERE snapshot_date = ?
+            ORDER BY ticker
+            """,
+            (today,)
+        )
+
+        return [dict(r) for r in cur.fetchall()]
+
+    def latest_report(self):
+
+        cur = self.conn.execute(
+            """
+            SELECT json
+            FROM reports
+            ORDER BY snapshot_date DESC
+            LIMIT 1
+            """
+        )
+
+        row = cur.fetchone()
+
+        if row is None:
+            return None
+
+        return Report.model_validate_json(row["json"])
+
+    def monthly_returns(self):
+
+        cur = self.conn.execute(
+            """
+            SELECT
+                substr(snapshot_date, 1, 7) AS month,
+                MIN(total_value) AS start_value,
+                MAX(total_value) AS end_value
+            FROM snapshots
+            GROUP BY month
+            ORDER BY month
+            """
+        )
+
+        rows = []
+
+        for r in cur.fetchall():
+            start = r["start_value"]
+            end = r["end_value"]
+
+            pct = (
+                (end - start) / start * 100
+                if start else 0
+            )
+
+            rows.append({
+                "month": r["month"],
+                "return_pct": round(pct, 2)
+            })
+
+        return rows

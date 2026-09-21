@@ -61,6 +61,11 @@ jobs:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
 
+      - name: Export Dashboard JSON
+        run: python export_dashboard.py
+        env:
+          PORTFOLIO_DB: db/data/portfolio.db
+
       # 7. Commit updated SQLite database
       - name: Commit portfolio database
         working-directory: db
