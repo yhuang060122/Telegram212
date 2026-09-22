@@ -44,7 +44,7 @@ class Analyst:
         for model in self.MODELS:
             for attempt in range(2):
                 try:
-                    log.info("Analyze", "Trying model: %s", model)
+                    log.info("Analyze", f"Trying model: {model}")
 
                     self.chat = self.client.chats.create(
                         model=model,
@@ -62,17 +62,17 @@ class Analyst:
                     if response.parsed is None:
                         raise ValueError("Empty structured response")
 
-                    log.info("Analyze", "Model %s succeeded", model)
+                    log.info("Analyze", f"Model {model} succeeded")
                     return response.parsed
 
                 except (ValidationError, ValueError) as e:
-                    log.warning("Analyze", "%s returned invalid JSON: %s", model, e)
+                    log.warning("Analyze", f"{model} returned invalid JSON: {e}")
 
                 except Exception as e:
                     if attempt == 0:
                         time.sleep(2)   # 等 2 秒再试一次
                     else:
-                        log.warning("Analyze", "%s failed twice", model)
+                        log.warning("Analyze", f"{model} failed twice", )
 
         log.error("Analyze", "All Gemini models failed.")
         return None
