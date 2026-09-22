@@ -1,7 +1,9 @@
 import os
-import requests
 
-class MacroCollector:
+from app.collectors.base import BaseCollector, CollectorError
+from app.logger import log
+
+class MacroCollector(BaseCollector):
 
     BASE = "https://api.stlouisfed.org/fred/series/observations"
 
@@ -12,32 +14,69 @@ class MacroCollector:
         "dxy": "DTWEXBGS",
     }
 
+    DEFAULT = {
+        "fed_rate": None,
+        "us10y": None,
+        "vix": None,
+        "dxy": None,
+    }
+
     def __init__(self):
         self.api_key = os.getenv("FRED_API_KEY")
 
-    def _latest(self, series_id):
+    def _latest(self, series_id: str):
 
-        r = requests.get(
-            self.BASE,
-            params={
-                "series_id": series_id,
-                "api_key": self.api_key,
-                "file_type": "json",
-                "sort_order": "desc",
-                "limit": 1,
-            },
-            timeout=15
-        )
+        try:
+            data = self.safe_get(
+                self.BASE,
+                {
+                    "series_id": series_id,
+                    "api_key": self.api_key,
+                    "file_type": "json",
+                    "sort_order": "desc",
+                    "limit": 1,
+                },
+            )
 
-        r.raise_for_status()
+            log.success(
+                "Macro",
+                f"{series_id} data"
+            )
 
-        obs = r.json()["observations"][0]
+            observations = data.get("observations", [])
 
-        return float(obs["value"])
+            if not observations:
+                return None
+
+            value = observations[0]["value"]
+
+            # FRED 缺失值通常是 "."
+            if value in (".", "", None):
+                log.warning(
+                    "Macro",
+                    f"{series_id} data missing"
+                )
+                return None
+
+            log.success(
+                "Macro",
+                f"{series_id} value: {value}"
+            )
+
+            return float(value)
+
+        except (CollectorError, ValueError, KeyError, IndexError) as e:
+            log.error(
+                "Macro",
+                str(e)
+            )
+            return None
 
     def collect(self):
 
-        return {
-            name: self._latest(code)
-            for name, code in self.SERIES.items()
-        }
+        result = {}
+
+        for name, code in self.SERIES.items():
+            result[name] = self._latest(code)
+
+        return result

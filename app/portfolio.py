@@ -165,51 +165,6 @@ class Portfolio:
             "risk": risk
         }
 
-    # ---------- GPT ----------
-
-    def to_gpt_json(self, sector_map=None):
-
-        if sector_map is None:
-            sector_map = {}
-
-        positions = []
-
-        for p in self.top_positions():
-            positions.append({
-                "ticker": p["ticker"],
-                "name": p["name"],
-                "weight": p["weight"],
-                "return_pct": round(
-                    p["pnl"] / p["cost"] * 100,
-                    2
-                ) if p["cost"] else 0,
-                "sector": sector_map.get(
-                    p["ticker"],
-                    "Unknown"
-                ),
-                "quantity": p["quantity"],
-                "avg_price": p["avg_price"],
-                "current_price": p["current_price"],
-                "market_value": p["market_value"],
-                "cost": p["cost"],
-                "pnl": p["pnl"],
-                "fx_impact": p["fx_impact"],
-                "inst_currency": p["inst_currency"]
-            })
-
-        return {
-            "currency": self.currency,
-            "total_value": self.total_value,
-            "cash": self.cash_available_to_trade + self.cash_reserved,
-            "cash_ratio": round(self.cash_ratio, 2),
-            "invested": self.invested,
-            "current_value": self.current_value,
-            "realized_pnl": self.realized_pnl,
-            "unrealized_pnl": round(self.return_pct, 2),
-            "positions": positions,
-            "concentration": self.concentration()
-        }
-
     # ---------- Report ----------
 
     def report(self):

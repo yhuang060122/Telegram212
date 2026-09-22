@@ -15,6 +15,13 @@ class PositionRating(BaseModel):
     rating: Literal["Buy", "Hold", "Reduce", "Sell"]
     rationale: str
 
+class DataStatus(BaseModel):
+    trading212: str = "ok"
+    finnhub: str = "ok"
+    fred: str = "ok"
+    gemini: str = "ok"
+
 class Report(BaseModel):
     portfolio_rating: PortfolioRating
     positions_ratings: list[PositionRating]
+    data_status: DataStatus = DataStatus()

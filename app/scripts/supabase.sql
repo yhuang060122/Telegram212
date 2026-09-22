@@ -107,7 +107,7 @@ create table if not exists news (
     source text,
 
     sentiment text
-        check (sentiment in ('Bullish','Neutral','Bearish')),
+        check (sentiment in ('Bullish','Neutral','Bearish', 'Unknown')),
 
     url text,
 

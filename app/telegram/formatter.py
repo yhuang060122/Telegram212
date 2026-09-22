@@ -3,49 +3,116 @@ from app.schema import Report
 class Formatter:
 
     @staticmethod
+    def data_sources(report) -> str:
+
+        icon = {
+            "ok": "✅",
+            "failed": "❌",
+            "partial": "⚠️",
+            "unknown": "➖",
+        }
+
+        status = report.data_status
+
+        lines = [
+            "",
+            "📡 *Data Sources*",
+            f"Trading212  {icon.get(status.trading212, '➖')}",
+            f"Finnhub     {icon.get(status.finnhub, '➖')}",
+            f"FRED        {icon.get(status.fred, '➖')}",
+            f"Gemini      {icon.get(status.gemini, '➖')}",
+        ]
+
+        return "\n".join(lines)
+
+    @staticmethod
     def daily(portfolio, report):
 
+        # -------------------------------
+        # Fallback (Gemini unavailable)
+        # -------------------------------
         if report is None:
-            return (
-                "📊 *Daily Portfolio Report*\n\n"
-                f"Portfolio: €{portfolio.total_value:,.0f}\n"
-                f"Cash: {portfolio.cash_ratio:.1f}%\n\n"
-                "⚠️ AI analysis is temporarily unavailable.\n"
-                "Market data and portfolio history were updated successfully."
-            )
+            lines = [
+                "📊 *Daily Portfolio Report*",
+                "",
+                f"💰 Portfolio: €{portfolio.total_value:,.0f}",
+                f"💵 Cash: {portfolio.cash_ratio:.1f}%",
+                "",
+                "⚠️ *AI analysis is temporarily unavailable.*",
+                "Market data and portfolio history were updated successfully.",
+                "",
+                "📡 *Data Sources*",
+                "Trading212  ✅",
+                "Finnhub     ➖",
+                "FRED        ➖",
+                "Gemini      ❌",
+            ]
 
+            return "\n".join(lines)
+
+        # -------------------------------
+        # Normal AI report
+        # -------------------------------
         p = report.portfolio_rating
 
         emoji = {
             "Positive": "🟢",
             "Neutral": "🟡",
-            "Negative": "🔴"
-        }[p.overall_sentiment]
+            "Negative": "🔴",
+        }.get(p.overall_sentiment, "⚪")
 
         lines = [
-            "*📊 AI Daily Brief*",
+            "📊 *AI Daily Brief*",
             "",
-            f"Portfolio: €{portfolio.total_value:,.0f}",
-            f"Cash: {portfolio.cash_ratio:.1f}%",
+            f"💰 Portfolio: €{portfolio.total_value:,.0f}",
+            f"💵 Cash: {portfolio.cash_ratio:.1f}%",
             "",
-            f"Sentiment: {emoji} *{p.overall_sentiment}*",
+            f"📈 Sentiment: {emoji} *{p.overall_sentiment}*",
             "",
             p.summary,
-            "",
-            "*Top Ideas*"
         ]
 
-        for stock in report.positions_ratings[:5]:
-            e = {
-                "Buy": "🟢",
-                "Hold": "🟡",
-                "Reduce": "🔴",
-                "Sell": "🔴"
-            }[stock.rating]
+        # -------------------------------
+        # Top Ideas
+        # -------------------------------
+        if report.positions_ratings:
+            lines += [
+                "",
+                "🧠 *Top Ideas*",
+            ]
 
-            lines.append(
-                f"{e} *{stock.ticker.replace('_US_EQ', '')}* — {stock.rating}"
-            )
+            for stock in report.positions_ratings[:5]:
+                e = {
+                    "Buy": "🟢",
+                    "Hold": "🟡",
+                    "Reduce": "🔴",
+                    "Sell": "🔴",
+                }.get(stock.rating, "⚪")
+
+                lines.append(
+                    f"{e} *{stock.ticker.replace('_US_EQ', '')}* — {stock.rating}"
+                )
+
+        # -------------------------------
+        # Data Sources
+        # -------------------------------
+        icon = {
+            "ok": "✅",
+            "failed": "❌",
+            "partial": "⚠️",
+            "unknown": "➖",
+        }
+
+        status = report.data_status
+
+        lines += [
+            "",
+            "📡 *Data Sources*",
+            f"Trading212  {icon.get(status.trading212, '➖')}",
+            f"Finnhub     {icon.get(status.finnhub, '➖')}",
+            f"FRED        {icon.get(status.fred, '➖')}",
+            f"Gemini      {icon.get(status.gemini, '➖')}",
+        ]
 
         return "\n".join(lines)
 

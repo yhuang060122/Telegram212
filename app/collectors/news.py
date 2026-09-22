@@ -1,8 +1,8 @@
 import os
 from dataclasses import dataclass
 from datetime import date, timedelta
-
-import requests
+from app.collectors.base import BaseCollector, CollectorError
+from app.logger import log
 
 @dataclass
 class NewsItem:
@@ -14,7 +14,7 @@ class NewsItem:
     published_at: str
     sentiment: str = "Unknown"
 
-class NewsCollector:
+class NewsCollector(BaseCollector):
 
     BASE_URL = "https://finnhub.io/api/v1"
 
@@ -25,20 +25,30 @@ class NewsCollector:
         today = date.today()
         week = today - timedelta(days=3)
 
-        r = requests.get(
-            f"{self.BASE_URL}/company-news",
-            params={
-                "symbol": ticker,
-                "form": week.isoformat(),
-                "to": today.isoformat(),
-                "token": self.api_key,
-            },
-            timeout=15
-        )
+        url = f"{self.BASE_URL}/company-news"
+        params = {
+            "symbol": ticker,
+            "form": week.isoformat(),
+            "to": today.isoformat(),
+            "token": self.api_key,
+        }
 
-        r.raise_for_status()
+        try:
+            result = self.safe_get(url, params=params)
 
-        return r.json()
+            log.success(
+                "Finnhub",
+                f"{len(result)} news"
+            )
+
+            return result
+
+        except CollectorError as e:
+            log.error(
+                "Finnhub",
+                str(e)
+            )
+            return []
 
     def collect(self, tickers: list[str]):
 

@@ -10,6 +10,9 @@ from app.schema import Report
 from app.storage import Storage
 from dotenv import load_dotenv
 
+from app.collectors.news import NewsItem
+from app.collectors.earnings import EarningsEvent
+
 load_dotenv()
 
 class SupabaseDatabase(Storage):
@@ -90,7 +93,7 @@ class SupabaseDatabase(Storage):
         if rows:
             self.db.table("positions").upsert(rows).execute()
 
-    def save_news(self, news: list[dict]) -> None:
+    def save_news(self, news: list[NewsItem]) -> None:
 
         if not news:
             return
@@ -98,7 +101,7 @@ class SupabaseDatabase(Storage):
         rows = []
 
         for n in news:
-            sentiment = n.get("sentiment") or "Unknown"
+            sentiment = n.sentiment or "Unknown"
 
             if sentiment not in self.VALID_SENTIMENT:
                 sentiment = "Unknown"
@@ -106,34 +109,33 @@ class SupabaseDatabase(Storage):
             rows.append(
                 {
                     "snapshot_date": date.today().isoformat(),
-                    "ticker": n["ticker"],
-                    "title": n["title"],
-                    "source": n.get("source"),
+                    "ticker": n.ticker,
+                    "title": n.title,
+                    "source": n.source,
                     "sentiment": sentiment,
-                    "url": n.get("url"),
+                    "url": n.url,
                 }
             )
 
         self.db.table("news").insert(rows).execute()
 
-    def save_earnings(self, earnings: list[dict]) -> None:
+    def save_earnings(self, earnings: list[EarningsEvent]) -> None:
 
         if not earnings:
             return
 
-        rows = []
+        rows = [
+            {
+                "snapshot_date": date.today().isoformat(),
+                "ticker": e.ticker,
+                "earnings_date": e.date,
+                "session": e.session,
+            }
+            for e in earnings
+        ]
 
-        for e in earnings:
-            rows.append(
-                {
-                    "snapshot_date": date.today().isoformat(),
-                    "ticker": e["ticker"],
-                    "earnings_date": e["earnings_date"],
-                    "session": e["session"],
-                }
-            )
-
-        self.db.table("earnings").insert(rows).execute()
+        if rows:
+            self.db.table("earnings").insert(rows).execute()
 
     def save_report(self, report: Report) -> None:
 

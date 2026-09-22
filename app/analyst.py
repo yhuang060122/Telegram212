@@ -1,4 +1,3 @@
-from openai import OpenAI, RateLimitError
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -6,16 +5,15 @@ from app.schema import Report
 from pydantic import ValidationError
 import os
 import json
-import logging
 import time
+from app.logger import log
+
 load_dotenv()
 
 SYSTEM_PROMPT = open(
     "prompts/analyst.md",
     encoding="utf-8"
 ).read()
-
-logger = logging.getLogger(__name__)
 
 class Analyst:
 
@@ -46,7 +44,7 @@ class Analyst:
         for model in self.MODELS:
             for attempt in range(2):
                 try:
-                    logger.info("Trying model: %s", model)
+                    log.info("Analyze", "Trying model: %s", model)
 
                     self.chat = self.client.chats.create(
                         model=model,
@@ -64,17 +62,17 @@ class Analyst:
                     if response.parsed is None:
                         raise ValueError("Empty structured response")
 
-                    logger.info("Model %s succeeded", model)
+                    log.info("Analyze", "Model %s succeeded", model)
                     return response.parsed
 
                 except (ValidationError, ValueError) as e:
-                    logger.warning("%s returned invalid JSON: %s", model, e)
+                    log.warning("Analyze", "%s returned invalid JSON: %s", model, e)
 
                 except Exception as e:
                     if attempt == 0:
                         time.sleep(2)   # 等 2 秒再试一次
                     else:
-                        logger.warning("%s failed twice", model)
+                        log.warning("Analyze", "%s failed twice", model)
 
-        logger.error("All Gemini models failed.")
+        log.error("Analyze", "All Gemini models failed.")
         return None

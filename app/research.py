@@ -1,27 +1,56 @@
 from app.collectors.news import NewsCollector
 from app.collectors.earnings import EarningsCollector
 from app.collectors.macro import MacroCollector
+from app.portfolio import Portfolio
+from dataclasses import dataclass
 
 
+@dataclass
 class ResearchContext:
+
+    portfolio: Portfolio
+
+    news: list
+    earnings: list
+    macro: dict
+
+    status: dict
 
     @classmethod
     def build(cls, portfolio):
+
+        status = {}
 
         tickers = [
             p["ticker"].replace("_US_EQ", "")
             for p in portfolio.top_positions()
         ]
 
-        news = NewsCollector().collect(tickers)
+        try:
+            news = NewsCollector().collect(tickers)
+            status["news"] = "ok"
+        except Exception:
+            news = []
+            status["news"] = "failed"
 
-        earnings = EarningsCollector().collect(tickers)
+        try:
+            earnings = EarningsCollector().collect(tickers)
+            status["earnings"] = "ok"
+        except Exception:
+            earnings = []
+            status["earnings"] = "failed"
 
-        macro = MacroCollector().collect()
+        try:
+            macro = MacroCollector().collect()
+            status["macro"] = "ok"
+        except Exception:
+            macro = {}
+            status["macro"] = "failed"
 
-        return {
-            "portfolio": portfolio.to_gpt_json(),
-            "news": [vars(n) for n in news],
-            "earnings": [vars(e) for e in earnings],
-            "macro": macro,
-        }
+        return cls(
+            portfolio=portfolio,
+            news=news,
+            earnings=earnings,
+            macro=macro,
+            status=status,
+        )
