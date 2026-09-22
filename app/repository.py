@@ -1,10 +1,10 @@
-from app.database import Database
 import pandas as pd
+from app.supabase_database import SupabaseDatabase
 
 class Repository:
 
-    def __init__(self, db_path="data/portfolio.db"):
-        self.db = Database(db_path)
+    def __init__(self):
+        self.db = SupabaseDatabase()
 
     def dashboard_summary(self):
         return {

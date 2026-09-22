@@ -1,14 +1,15 @@
 from app.trading212 import Trading212Client
 from app.portfolio import Portfolio
 from app.research import ResearchContext
-from app.database import Database
+from app.repository import Repository
 from app.analyst import Analyst
 
 class DailyPipeline:
 
-    def __init__(self, db_path):
+    def __init__(self):
+        self.repo = Repository()
+
         self.client = Trading212Client()
-        self.db = Database(db_path)
         self.analyst = Analyst()
 
     def run(self):
@@ -23,13 +24,13 @@ class DailyPipeline:
         context = ResearchContext.build(portfolio)
 
         # 3. Persist today's data
-        self.db.save_snapshot(context["portfolio"])
-        self.db.save_positions(context["portfolio"])
-        self.db.save_news(context["news"])
-        self.db.save_earnings(context["earnings"])
+        self.repo.db.save_snapshot(portfolio)
+        self.repo.db.save_positions(portfolio)
+        self.repo.db.save_news(context["news"])
+        self.repo.db.save_earnings(context["earnings"])
 
         # 4. Load updated history
-        history = self.db.get_history(days=30)
+        history = self.repo.db.get_history(days=30)
 
         # 5. AI analysis (graceful fallback)
         report = self.analyst.analyze(
@@ -37,6 +38,6 @@ class DailyPipeline:
             history=history
         )
 
-        self.db.save_report(report)
+        self.repo.db.save_report(report)
 
         return portfolio, report, history

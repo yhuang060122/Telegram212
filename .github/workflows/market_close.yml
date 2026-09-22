@@ -23,10 +23,13 @@ jobs:
       - name: Run Close Pipeline
         run: python close.py
         env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+
           T212_API_KEY: ${{ secrets.T212_API_KEY }}
           T212_API_SECRET: ${{ secrets.T212_API_SECRET }}
+
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
-          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}

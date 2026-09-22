@@ -78,8 +78,11 @@ class Portfolio:
 
         return weights
 
-    def top_positions(self):
+    def top_positions(self, sector_map=None):
         """按市值排序"""
+
+        if sector_map is None:
+            sector_map = {}
 
         weights = self.position_weights()
 
@@ -100,6 +103,14 @@ class Portfolio:
                 "weight": weights[ticker],
                 "fx_impact": p["walletImpact"]["fxImpact"],
                 "inst_currency": p["instrument"]["currency"],
+                "return_pct": round(
+                    p["walletImpact"]["unrealizedProfitLoss"] / p["walletImpact"]["totalCost"] * 100,
+                    2
+                ) if p["walletImpact"]["totalCost"] else 0,
+                "sector": sector_map.get(
+                    ticker,
+                    "Unknown"
+                ),
             })
 
         return sorted(

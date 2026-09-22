@@ -1,16 +1,16 @@
 from app.pipeline import DailyPipeline
 from app.telegram.bot import TelegramBot
 from app.telegram.formatter import Formatter
-import os
-
-DB_PATH = os.getenv(
-    "PORTFOLIO_DB",
-    "data/portfolio.db"
-)
+from app.supabase_database import SupabaseDatabase
 
 def main():
 
-    pipeline = DailyPipeline(DB_PATH)
+    db = SupabaseDatabase()
+
+    if not db.health_check():
+        raise RuntimeError("Supabase connection failed")
+
+    pipeline = DailyPipeline()
 
     portfolio, report, history = pipeline.run()
 

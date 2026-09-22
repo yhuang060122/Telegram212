@@ -3,12 +3,7 @@ from app.telegram.bot import TelegramBot
 from app.telegram.formatter import Formatter
 import os
 
-DB_PATH = os.getenv(
-    "PORTFOLIO_DB",
-    "data/portfolio.db"
-)
-
-pipeline = DailyPipeline(DB_PATH)
+pipeline = DailyPipeline()
 
 portfolio, report, history = pipeline.run()
 

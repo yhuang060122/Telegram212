@@ -1,9 +1,9 @@
 from app.trading212 import Trading212Client
 from app.portfolio import Portfolio
 from app.research import ResearchContext
-from app.database import Database
 from app.analyst import Analyst
 from .formatter import Formatter
+from ..repository import Repository
 
 
 def load_portfolio():
@@ -20,9 +20,9 @@ def daily():
 
     portfolio = load_portfolio()
     context = ResearchContext.build(portfolio)
-    db = Database()
+    repo = Repository()
 
-    history = db.get_history(30)
+    history = repo.db.get_history(30)
 
     report = Analyst().analyze(
         context,
@@ -42,10 +42,10 @@ def portfolio():
 
 def history(self, message):
 
-    db = Database()
+    repo = Repository()
     ticker = message.split()[1].upper()
 
-    data = db.get_position_history(
+    data = repo.db.get_position_history(
         ticker + "_US_EQ"
     )
 
@@ -67,7 +67,7 @@ def analyze_stock(ticker: str):
     ticker = ticker.upper()
 
     client = Trading212Client()
-    db = Database()
+    repo = Repository()
 
     portfolio = Portfolio(
         client.account_summary(),
@@ -105,7 +105,7 @@ def analyze_stock(ticker: str):
         if e["ticker"] == ticker
     ]
 
-    history = db.get_position_history(full_ticker)
+    history = repo.db.get_position_history(full_ticker)
 
     report = Analyst().analyze(
         context=context,
