@@ -1,7 +1,8 @@
 from app.pipeline import DailyPipeline
 from app.telegram.bot import TelegramBot
 from app.telegram.formatter import Formatter
-import os
+
+from app.logger import log
 
 pipeline = DailyPipeline()
 
@@ -15,4 +16,7 @@ message = Formatter.market_close(
 
 TelegramBot().send(message)
 
-print("✅ Market close report sent.")
+log.success(
+    "✅ Market close report",
+    "Sent"
+)
