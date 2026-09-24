@@ -1,94 +1,92 @@
-from app.trading212 import Trading212Client
-from app.portfolio import Portfolio
-from app.research import ResearchContext
+from app.services.portfolio_service import PortfolioService
+from app.services.research_service import ResearchService
+from app.services.analyst_service import AnalystService
 from app.repository import Repository
-from app.analyst import Analyst
 from app.logger import log
 
+
 class DailyPipeline:
+    """Main application workflow."""
 
     def __init__(self):
+
+        self.portfolio_service = PortfolioService()
+        self.research_service = ResearchService()
+        self.analyst_service = AnalystService()
+
         self.repo = Repository()
 
-        self.client = Trading212Client()
-        self.analyst = Analyst()
-
     def run(self):
+        """
+        Returns:
+            tuple[Portfolio, Report | None, list]
+        """
 
-        # 1. Portfolio
-        summary = self.client.account_summary()
-        positions = self.client.positions()
+        if not self.repo.health_check():
+            log.error(
+                "Health check",
+                "Supabase connection failed",
+            )
+            raise RuntimeError("Supabase connection failed")
 
-        log.success(
-            "Trading212",
-            "Connected"
-        )
+        # =====================================================
+        # Portfolio
+        # =====================================================
 
-        portfolio = Portfolio(summary, positions)
+        portfolio = self.portfolio_service.build()
 
         log.success(
             "Portfolio",
-            f"{len(portfolio.positions)} positions (€{portfolio.total_value:,.0f})"
+            f"{len(portfolio.positions)} positions (€{portfolio.total_value:,.0f})",
         )
 
-        # Persist today's data
-        self.repo.db.save_snapshot(portfolio)
-        self.repo.db.save_positions(portfolio)
+        self.repo.save_snapshot(portfolio)
+        self.repo.save_positions(portfolio)
+
+        # =====================================================
+        # Research
+        # =====================================================
+
+        context = self.research_service.build(portfolio)
+
+        self.repo.save_news(context.news)
+        self.repo.save_earnings(context.earnings)
+        self.repo.save_macro(context.macro)
 
         log.success(
-            "Supabase",
-            "Snapshot and Positions Saved"
+            "Research",
+            f"{len(context.news)} news · {len(context.earnings)} earnings · marco",
         )
 
-        # 2. Research
-        context = ResearchContext.build(portfolio)
+        # =====================================================
+        # AI Analysis
+        # =====================================================
 
-        # Persist today's data
-        if context.news:
-            self.repo.db.save_news(context.news)
+        history = self.repo.history(30)
 
-            log.success(
-                "Supabase",
-                "News Saved"
-            )
-
-        # Persist today's data
-        if context.earnings:
-            self.repo.db.save_earnings(context["earnings"])
-
-            log.success(
-                "Supabase",
-                "Earnings Saved"
-            )
-
-        # TODO: add macro to supabase
-
-        # 4. Load updated history
-        history = self.repo.db.get_history(days=30)
-
-        # 5. AI analysis (graceful fallback)
-        report = self.analyst.analyze(
+        report = self.analyst_service.analyze(
             context=context,
-            history=history
+            history=history,
         )
 
-        if report is None:
-            log.warning("Gemini", "No report generated")
+        if report:
 
-            return portfolio, None, history
+            self.repo.save_report(report)
 
-        log.success("Gemini", "Report generated")
+            log.success(
+                "Gemini",
+                report.portfolio_rating.overall_sentiment,
+            )
 
-        report.data_status.trading212 = "ok"
-        report.data_status.finnhub = context.status.get("news", "failed")
-        report.data_status.fred = context.status.get("macro", "failed")
-        report.data_status.gemini = "ok"
+        else:
 
-        self.repo.db.save_report(report)
+            log.warning(
+                "Gemini",
+                "No report generated",
+            )
 
-        log.success(
-            "Supabase",
-            "Report Saved"
-        )
+        # =====================================================
+        # Done
+        # =====================================================
 
         return portfolio, report, history

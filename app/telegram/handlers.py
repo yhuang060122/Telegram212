@@ -1,119 +1,126 @@
-from app.trading212 import Trading212Client
-from app.portfolio import Portfolio
-from app.research import ResearchContext
-from app.analyst import Analyst
-from .formatter import Formatter
-from ..repository import Repository
+from app.domain.position import Position
+from app.services.portfolio_service import PortfolioService
+from app.services.research_service import ResearchService
+from app.services.analyst_service import AnalystService
+from app.telegram.formatter import Formatter
+from app.repository import Repository
+
+
+portfolio_service = PortfolioService()
+research_service = ResearchService()
+analyst_service = AnalystService()
+repo = Repository()
 
 
 def load_portfolio():
-    client = Trading212Client()
+    """Load the current portfolio from Trading212."""
+    return portfolio_service.build()
 
-    summary = client.account_summary()
-    positions = client.positions()
 
-    portfolio = Portfolio(summary, positions)
-
-    return portfolio
+# =====================================================
+# /daily
+# =====================================================
 
 def daily():
 
-    portfolio = load_portfolio()
-    context = ResearchContext.build(portfolio)
-    repo = Repository()
+    ptf = load_portfolio()
 
-    history = repo.db.get_history(30)
+    context = research_service.build(ptf)
 
-    report = Analyst().analyze(
-        context,
-        history
+    hty = repo.history(30)
+
+    report = analyst_service.analyze(
+        context=context,
+        history=hty,
     )
 
     return Formatter.daily(
-        portfolio,
-        report
+        ptf,
+        report,
     )
+
+
+# =====================================================
+# /portfolio
+# =====================================================
 
 def portfolio():
 
-    portfolio = load_portfolio()
+    return Formatter.portfolio(
+        load_portfolio()
+    )
 
-    return Formatter.portfolio(portfolio)
 
-def history(self, message):
+# =====================================================
+# /history NVDA
+# =====================================================
 
-    repo = Repository()
-    ticker = message.split()[1].upper()
+def history(message: str):
 
-    data = repo.db.get_position_history(
-        ticker + "_US_EQ"
+    parts = message.split()
+
+    if len(parts) < 2:
+        return "Usage: `/history NVDA`"
+
+    ticker = parts[1].upper()
+
+    data = repo.position_history(
+        f"{ticker}_US_EQ"
     )
 
     return Formatter.history(
         ticker,
-        data
+        data,
     )
 
 
+# =====================================================
+# /risk
+# =====================================================
+
 def risk():
 
-    portfolio = load_portfolio()
+    return Formatter.risk(
+        load_portfolio()
+    )
 
-    return Formatter.risk(portfolio)
 
+# =====================================================
+# /stock NVDA
+# =====================================================
 
 def analyze_stock(ticker: str):
 
     ticker = ticker.upper()
 
-    client = Trading212Client()
-    repo = Repository()
-
-    portfolio = Portfolio(
-        client.account_summary(),
-        client.positions()
-    )
-
-    # Trading212 使用 NVDA_US_EQ 这种格式
     full_ticker = f"{ticker}_US_EQ"
 
-    # 检查是否持有
-    position = next(
-        (p for p in portfolio.top_positions() if p["ticker"] == full_ticker),
-        None
+    ptf = load_portfolio()
+
+    position: Position | None = ptf.get_position(
+        full_ticker
     )
 
     if position is None:
         return f"❌ *{ticker}* is not in your portfolio."
 
-    # 构建完整 Context
-    context = ResearchContext.build(portfolio)
-
-    # 只保留当前股票的数据（减少 Token）
-    context["portfolio"]["positions"] = [
-        p for p in context["portfolio"]["positions"]
-        if p["ticker"] == full_ticker
-    ]
-
-    context["news"] = [
-        n for n in context["news"]
-        if n["ticker"] == ticker
-    ]
-
-    context["earnings"] = [
-        e for e in context["earnings"]
-        if e["ticker"] == ticker
-    ]
-
-    history = repo.db.get_position_history(full_ticker)
-
-    report = Analyst().analyze(
-        context=context,
-        history=history
+    context = research_service.build(
+        portfolio=ptf,
+        tickers=[ticker],
     )
+
+    hty = repo.position_history(full_ticker)
+
+    report = analyst_service.analyze(
+        context=context,
+        history=hty,
+    )
+
+    if report is None:
+        return f"⚠️ AI analysis unavailable for *{ticker}*."
 
     return Formatter.stock_analysis(
         position=position,
         report=report,
-        history=history
+        history=hty,
     )

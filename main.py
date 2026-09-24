@@ -1,16 +1,10 @@
 from app.pipeline import DailyPipeline
 from app.telegram.bot import TelegramBot
 from app.telegram.formatter import Formatter
-from app.supabase_database import SupabaseDatabase
 
 from app.logger import log
 
 def main():
-
-    db = SupabaseDatabase()
-
-    if not db.health_check():
-        raise RuntimeError("Supabase connection failed")
 
     pipeline = DailyPipeline()
 

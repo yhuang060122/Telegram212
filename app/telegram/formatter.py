@@ -1,9 +1,16 @@
-from app.schema import Report
+from app.domain.portfolio import Portfolio
+from app.domain.position import Position
+from app.domain.report import Report
+
 
 class Formatter:
 
+    # =====================================================
+    # Shared
+    # =====================================================
+
     @staticmethod
-    def data_sources(report) -> str:
+    def data_sources(report: Report) -> str:
 
         icon = {
             "ok": "✅",
@@ -12,54 +19,43 @@ class Formatter:
             "unknown": "➖",
         }
 
-        status = report.data_status
+        s = report.data_status
 
-        lines = [
+        return "\n".join([
             "",
             "📡 *Data Sources*",
-            f"Trading212  {icon.get(status.trading212, '➖')}",
-            f"Finnhub     {icon.get(status.finnhub, '➖')}",
-            f"FRED        {icon.get(status.fred, '➖')}",
-            f"Gemini      {icon.get(status.gemini, '➖')}",
-        ]
+            f"Trading212  {icon.get(s.trading212,'➖')}",
+            f"Finnhub     {icon.get(s.finnhub,'➖')}",
+            f"FRED        {icon.get(s.fred,'➖')}",
+            f"Gemini      {icon.get(s.gemini,'➖')}",
+        ])
 
-        return "\n".join(lines)
+    # =====================================================
+    # Daily
+    # =====================================================
 
     @staticmethod
-    def daily(portfolio, report):
+    def daily(portfolio: Portfolio, report: Report | None):
 
-        # -------------------------------
-        # Fallback (Gemini unavailable)
-        # -------------------------------
         if report is None:
-            lines = [
-                "📊 *Daily Portfolio Report*",
+
+            return "\n".join([
+                "🕐 *Daily Portfolio Report*",
                 "",
                 f"💰 Portfolio: €{portfolio.total_value:,.0f}",
                 f"💵 Cash: {portfolio.cash_ratio:.1f}%",
                 "",
                 "⚠️ *AI analysis is temporarily unavailable.*",
-                "Market data and portfolio history were updated successfully.",
-                "",
-                "📡 *Data Sources*",
-                "Trading212  ✅",
-                "Finnhub     ➖",
-                "FRED        ➖",
-                "Gemini      ❌",
-            ]
+                "Market data updated successfully.",
+            ])
 
-            return "\n".join(lines)
-
-        # -------------------------------
-        # Normal AI report
-        # -------------------------------
         p = report.portfolio_rating
 
         emoji = {
             "Positive": "🟢",
             "Neutral": "🟡",
             "Negative": "🔴",
-        }.get(p.overall_sentiment, "⚪")
+        }[p.overall_sentiment]
 
         lines = [
             "📊 *AI Daily Brief*",
@@ -72,118 +68,81 @@ class Formatter:
             p.summary,
         ]
 
-        # -------------------------------
-        # Top Ideas
-        # -------------------------------
         if report.positions_ratings:
-            lines += [
-                "",
-                "🧠 *Top Ideas*",
-            ]
+
+            lines += ["", "🧠 *Top Ideas*"]
 
             for stock in report.positions_ratings[:5]:
+
                 e = {
                     "Buy": "🟢",
                     "Hold": "🟡",
                     "Reduce": "🔴",
                     "Sell": "🔴",
-                }.get(stock.rating, "⚪")
+                }[stock.rating]
+
+                ticker = stock.ticker.replace("_US_EQ", "")
 
                 lines.append(
-                    f"{e} *{stock.ticker.replace('_US_EQ', '')}* — {stock.rating}"
+                    f"{e} *{ticker}* — {stock.rating}"
                 )
 
-        # -------------------------------
-        # Data Sources
-        # -------------------------------
-        icon = {
-            "ok": "✅",
-            "failed": "❌",
-            "partial": "⚠️",
-            "unknown": "➖",
-        }
-
-        status = report.data_status
-
-        lines += [
-            "",
-            "📡 *Data Sources*",
-            f"Trading212  {icon.get(status.trading212, '➖')}",
-            f"Finnhub     {icon.get(status.finnhub, '➖')}",
-            f"FRED        {icon.get(status.fred, '➖')}",
-            f"Gemini      {icon.get(status.gemini, '➖')}",
-        ]
+        lines.append(Formatter.data_sources(report))
 
         return "\n".join(lines)
 
+    # =====================================================
+    # Portfolio
+    # =====================================================
+
     @staticmethod
-    def history(ticker: str, history: list[dict]) -> str:
-        """
-        history:
-        [
-            {
-                "snapshot_date": "2026-09-10",
-                "quantity": 22,
-                "weight": 18.6,
-                "market_value": 15720
-            },
-            ...
-        ]
-        """
+    def portfolio(portfolio: Portfolio):
 
-        if not history:
-            return f"*{ticker}*\n\nNo historical data available."
-
-        lines = [
-            f"*📈 {ticker} · Position History*",
-            ""
+        text = [
+            "📊 *Current Portfolio*",
+            "",
+            f"**Total Value:** {portfolio.currency} {portfolio.total_value:,.2f}",
+            f"**Available Cash:** {portfolio.currency} {portfolio.cash_available:,.2f}",
+            f"**Cash Ratio:** {portfolio.cash_ratio:.1f}%",
+            f"**Unrealized P/L:** {portfolio.currency} {portfolio.unrealized_pnl:,.2f}",
+            f"**Return:** {portfolio.return_pct:+.2f}%",
+            "",
+            "*Top Holdings*",
         ]
 
-        first = history[0]["weight"]
-        last = history[-1]["weight"]
+        for i, p in enumerate(portfolio.top_positions[:10], start=1):
 
-        if last > first:
-            trend = "Increasing 📈"
-        elif last < first:
-            trend = "Decreasing 📉"
-        else:
-            trend = "Stable ➖"
+            emoji = "🟢" if p.return_pct >= 0 else "🔴"
 
-        for row in history:
-            date = row["snapshot_date"][5:]  # MM-DD
-            qty = row["quantity"]
-            weight = row["weight"]
-
-            lines.append(
-                f"`{date}`  {qty:.0f} sh   {weight:.1f}%"
+            text.append(
+                f"{i}. *{p.ticker.replace('_US_EQ','')}* `{p.weight:.1f}%`"
             )
 
-        lines.extend([
-            "",
-            f"*Trend:* {trend}",
-            f"*Current Weight:* {last:.1f}%"
-        ])
+            text.append(
+                f"   {emoji} {p.quantity:.2f} sh | {p.return_pct:+.1f}%"
+            )
 
-        return "\n".join(lines)
+        return "\n".join(text)
+
+    # =====================================================
+    # Risk
+    # =====================================================
 
     @staticmethod
-    def risk(portfolio):
+    def risk(portfolio: Portfolio):
 
-        concentration = portfolio.concentration()
+        concentration = portfolio.concentration
+
+        risk = concentration["risk"]
+
+        emoji = {
+            "Low": "🟢",
+            "Medium": "🟡",
+            "High": "🔴",
+        }[risk]
 
         cash = portfolio.cash_ratio
-        top5 = concentration["top5_weight"]
-        risk_level = concentration["risk"]
 
-        # Emoji
-        if risk_level == "Low":
-            emoji = "🟢"
-        elif risk_level == "Medium":
-            emoji = "🟡"
-        else:
-            emoji = "🔴"
-
-        # Cash interpretation
         if cash < 5:
             cash_text = "Very Low"
         elif cash < 15:
@@ -194,28 +153,38 @@ class Formatter:
         lines = [
             "*⚠️ Portfolio Risk Report*",
             "",
-            f"Overall Risk : {emoji} *{risk_level}*",
+            f"Overall Risk : {emoji} *{risk}*",
             "",
             "*Concentration*",
-            f"• Top 5 Holdings : *{top5:.1f}%*",
+            f"• Top 5 Holdings : *{concentration['top5_weight']:.1f}%*",
             "",
             "*Liquidity*",
             f"• Cash Ratio : *{cash:.1f}%* ({cash_text})",
             "",
-            "*Largest Positions*"
+            "*Largest Positions*",
         ]
 
-        for pos in portfolio.top_positions()[:5]:
+        for p in portfolio.top_positions[:5]:
+
             lines.append(
-                f"• {pos['ticker']} — {pos['weight']:.1f}%"
+                f"• {p.ticker.replace('_US_EQ','')} — {p.weight:.1f}%"
             )
 
         return "\n".join(lines)
 
+    # =====================================================
+    # Stock Analysis
+    # =====================================================
+
     @staticmethod
-    def stock_analysis(position, report: Report, history):
+    def stock_analysis(
+        position: Position,
+        report: Report,
+        history: list[dict],
+    ):
 
         portfolio_view = report.portfolio_rating
+
         stock = report.positions_ratings[0]
 
         emoji = {
@@ -223,18 +192,12 @@ class Formatter:
             "Hold": "🟡",
             "Reduce": "🔴",
             "Sell": "🔴",
-        }.get(stock.rating, "⚪")
-
-        current = position["current_price"]
-        avg = position["avg_price"]
-
-        pnl_pct = (
-            position["pnl"] / position["cost"] * 100
-            if position["cost"] else 0
-        )
+        }[stock.rating]
 
         trend = "N/A"
+
         if len(history) >= 2:
+
             first = history[0]["weight"]
             last = history[-1]["weight"]
 
@@ -246,18 +209,18 @@ class Formatter:
                 trend = "Stable ➖"
 
         lines = [
-            f"*📈 {stock.name}*",
-            f"`{stock.ticker}`",
+            f"*📈 {position.name}*",
+            f"`{position.ticker}`",
             "",
             f"*AI Rating:* {emoji} *{stock.rating}*",
             f"*Sentiment:* {portfolio_view.overall_sentiment}",
             "",
             "*Current Position*",
-            f"• Weight: {position['weight']:.1f}%",
-            f"• Shares: {position['quantity']:.2f}",
-            f"• Avg Cost: €{avg:.2f}",
-            f"• Current Price: €{current:.2f}",
-            f"• Unrealized: {pnl_pct:+.2f}%",
+            f"• Weight: {position.weight:.1f}%",
+            f"• Shares: {position.quantity:.2f}",
+            f"• Avg Cost: €{position.avg_price:.2f}",
+            f"• Current Price: €{position.current_price:.2f}",
+            f"• Unrealized: {position.return_pct:+.2f}%",
             "",
             "*30-Day Trend*",
             f"• {trend}",
@@ -277,88 +240,116 @@ class Formatter:
 
         return "\n\n".join(lines)
 
+    # =====================================================
+    # History
+    # =====================================================
+
     @staticmethod
-    def portfolio(portfolio):
+    def history(ticker: str, history: list[dict]):
 
-        positions = portfolio.top_positions()
+        if not history:
+            return f"*{ticker}*\n\nNo historical data available."
 
-        text = [
-            "📊 *Current Portfolio*",
+        first = history[0]["weight"]
+        last = history[-1]["weight"]
+
+        if last > first:
+            trend = "Increasing 📈"
+        elif last < first:
+            trend = "Decreasing 📉"
+        else:
+            trend = "Stable ➖"
+
+        lines = [
+            f"*📈 {ticker} · Position History*",
             "",
-            f"**Total Value:** {portfolio.currency} {portfolio.total_value:,.2f}",
-            f"**Available Cash:** {portfolio.currency} {portfolio.cash_available_to_trade:,.2f}",
-            f"**Cash Ratio:** {portfolio.cash_ratio:.1f}%",
-            f"**Unrealized P/L:** {portfolio.currency} {portfolio.unrealized_pnl:,.2f}",
-            f"**Return:** {portfolio.return_pct:+.2f}%",
-            "",
-            "*Top Holdings*"
         ]
 
-        for i, p in enumerate(positions[:10], start=1):
-            rtn = (
-                p["pnl"] / p["cost"] * 100
-                if p["cost"] else 0
+        for row in history:
+
+            lines.append(
+                f"`{row['snapshot_date'][5:]}`  {row['quantity']:.0f} sh   {row['weight']:.1f}%"
             )
 
-            emoji = "🟢" if rtn >= 0 else "🔴"
+        lines += [
+            "",
+            f"*Trend:* {trend}",
+            f"*Current Weight:* {last:.1f}%",
+        ]
 
-            text.append(
-                f"{i}. *{p['ticker'].replace('_US_EQ', '')}* "
-                f"`{p['weight']:.1f}%`"
-            )
-            text.append(
-                f"   {emoji} {p['quantity']:.2f} sh | {rtn:+.1f}%"
-            )
+        return "\n".join(lines)
 
-        return "\n".join(text)
+    # =====================================================
+    # Market Close
+    # =====================================================
 
     @staticmethod
-    def help():
-        return """
-    *Trading212 AI Bot*
-
-    /daily - AI Daily Report
-    /portfolio - Current holdings
-    /risk - Portfolio risk
-    /stock nvda - Analyze NVDA
-    /history NVDA - 30-day history
-    """
-
-    @staticmethod
-    def market_close(portfolio, report, history):
+    def market_close(
+        portfolio: Portfolio,
+        report: Report | None,
+        history: list[dict],
+    ):
 
         today = history[-1] if history else None
         yesterday = history[-2] if len(history) >= 2 else None
 
-        daily_change = 0.0
-        daily_pct = 0.0
+        change = 0
+        pct = 0
 
         if today and yesterday:
-            daily_change = today["total_value"] - yesterday["total_value"]
-            daily_pct = daily_change / yesterday["total_value"] * 100
 
-        emoji = "🟢" if daily_change >= 0 else "🔴"
+            change = (
+                today["total_value"]
+                - yesterday["total_value"]
+            )
+
+            pct = (
+                change
+                / yesterday["total_value"]
+                * 100
+            )
+
+        emoji = "🟢" if change >= 0 else "🔴"
 
         lines = [
             "🌙 *Market Close Report*",
             "",
             f"**Portfolio Value:** €{portfolio.total_value:,.2f}",
-            f"**Today's Change:** {emoji} €{daily_change:+,.2f} ({daily_pct:+.2f}%)",
+            f"**Today's Change:** {emoji} €{change:+,.2f} ({pct:+.2f}%)",
             f"**Cash:** {portfolio.cash_ratio:.1f}%",
             "",
-            "*Top Holdings*"
+            "*Top Holdings*",
         ]
 
-        for p in portfolio.top_positions()[:5]:
+        for p in portfolio.top_positions[:5]:
+
             lines.append(
-                f"• {p['ticker'].replace('_US_EQ', '')}  {p['weight']:.1f}%"
+                f"• {p.ticker.replace('_US_EQ','')}  {p.weight:.1f}%"
             )
 
-        if report is not None:
-            lines.extend([
+        if report:
+
+            lines += [
                 "",
                 "*AI Closing View*",
-                report.portfolio_rating.summary
-            ])
+                report.portfolio_rating.summary,
+            ]
 
         return "\n".join(lines)
+
+    # =====================================================
+    # Help
+    # =====================================================
+
+    @staticmethod
+    def help():
+
+        return """
+*Trading212 AI Bot*
+
+/daily - AI Daily Report
+/portfolio - Current holdings
+/risk - Portfolio risk
+/stock nvda - Analyze NVDA
+/history NVDA - 30-day history
+"""
