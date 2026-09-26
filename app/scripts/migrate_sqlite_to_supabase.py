@@ -5,7 +5,6 @@ import os
 import sqlite3
 import uuid
 from pathlib import Path
-from typing import Iterable
 
 from dotenv import load_dotenv
 from supabase import Client, create_client

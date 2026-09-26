@@ -9,9 +9,10 @@ from pyxirr import xirr
 
 from app.domain.analytics import (
     Allocation,
+    ConcentrationMetrics,
     PerformanceMetrics,
     PortfolioAnalytics,
-    RiskMetrics, ConcentrationMetrics,
+    RiskMetrics,
 )
 from app.domain.cashflow import CashFlow
 from app.domain.portfolio import Portfolio, PortfolioSnapshot
@@ -20,11 +21,16 @@ from app.domain.portfolio import Portfolio, PortfolioSnapshot
 class AnalyticsService:
     """Compute derived analytics from Portfolio + historical snapshots."""
 
+    def __init__(self):
+        self.risk_free_rate = 0.02
+
     def calculate(self,
                   portfolio: Portfolio,
                   history: list[PortfolioSnapshot],
                   cashflows: list[CashFlow],
+                  risk_free_rate: float = 0.02,
                   ) -> PortfolioAnalytics:
+        self.risk_free_rate = risk_free_rate
         return PortfolioAnalytics(
             performance=self._performance(
                 portfolio,
@@ -193,8 +199,7 @@ class AnalyticsService:
 
     def _sharpe(
             self,
-            history: list[PortfolioSnapshot],
-            risk_free_rate: float = 0.02,
+            history: list[PortfolioSnapshot]
     ) -> float | None:
 
         returns = self._daily_returns(history)
@@ -217,7 +222,7 @@ class AnalyticsService:
 
         annual_vol = daily_vol * math.sqrt(252)
 
-        sharpe = (annual_return - risk_free_rate) / annual_vol
+        sharpe = (annual_return - self.risk_free_rate) / annual_vol
 
         return round(sharpe, 2)
 
@@ -255,6 +260,9 @@ class AnalyticsService:
             return None
 
         return round((end - start) / start * 100, 2)
+
+    def calculate_xirr(self, portfolio, cashflows):
+        return self._xirr(portfolio, cashflows)
 
     @staticmethod
     def _xirr(

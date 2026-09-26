@@ -1,6 +1,7 @@
 import logging
 import sys
 
+
 class PipelineLogger:
 
     def __init__(self):

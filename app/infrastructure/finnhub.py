@@ -1,12 +1,11 @@
 import os
-from datetime import date, timedelta, datetime
+from datetime import date, datetime, timedelta
 
 import requests
 from dotenv import load_dotenv
 
-from app.domain.news import NewsItem
 from app.domain.earnings import EarningsEvent
-
+from app.domain.news import NewsItem
 from app.logger import log
 
 load_dotenv()

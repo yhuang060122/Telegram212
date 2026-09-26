@@ -59,44 +59,6 @@ class Portfolio(BaseModel):
             reverse=True,
         )
 
-    # TODO: use analytics_service
-    @property
-    def sector_allocation(self) -> dict[str, float]:
-        allocation: dict[str, float] = {}
-
-        for position in self.positions:
-            allocation[position.sector] = (
-                    allocation.get(position.sector, 0)
-                    + position.market_value
-            )
-
-        return {
-            sector: round(value / self.total_value * 100, 1)
-            for sector, value in allocation.items()
-        }
-
-    # TODO: use analytics_service
-    @property
-    def concentration(self) -> dict[str, float | str]:
-        weights = sorted(
-            (position.weight for position in self.positions),
-            reverse=True,
-        )
-
-        top5 = round(sum(weights[:5]), 1)
-
-        if top5 >= 70:
-            risk = "High"
-        elif top5 >= 50:
-            risk = "Medium"
-        else:
-            risk = "Low"
-
-        return {
-            "top5_weight": top5,
-            "risk": risk,
-        }
-
     def get_position(self, ticker: str) -> Position | None:
         return next(
             (

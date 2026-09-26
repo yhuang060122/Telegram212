@@ -7,3 +7,7 @@ google-genai
 pandas
 supabase>=2.6.0
 pyxirr>=0.10.5
+ruff>=0.13
+pytest>=9.1
+pytest-cov>=7.1
+pytest-mock>=3.15
