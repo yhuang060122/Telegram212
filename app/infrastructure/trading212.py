@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from time import sleep
 
@@ -32,7 +32,7 @@ class Trading212Client:
             api_secret
         )
 
-    def _get(self, endpoint: str, params: dict | None = None) -> dict:
+    def _get(self, endpoint: str, params: dict | None = None):
         url = f"{self.BASE_URL}/{endpoint}"
 
         while True:
@@ -69,6 +69,57 @@ class Trading212Client:
     # TODO:
     # def instrument(self, ticker: str) -> dict:
     #     return self._get(f"metadata/instruments/{ticker}")
+
+    def transactions_since(
+            self,
+            latest_reference: str | None,
+    ) -> list[CashFlow]:
+        endpoint = "history/transactions"
+        utc_now = (
+            datetime.now(timezone.utc)
+            .isoformat(timespec="milliseconds")
+            .replace("+00:00", "Z")
+        )
+
+        params = {
+            "cursor": latest_reference,
+            "limit": 50,
+            "time": utc_now
+        }
+        cashflows = []
+        requests_count = 0
+
+        while True:
+
+            data = self._get(endpoint, params)
+
+            cashflows.extend(
+                self._to_cashflow(i)
+                for i in data["items"]
+            )
+
+            # '/api/v0/equity/history/transactions?limit=50&cursor=01a083bf-7680-7472-8f69-581cef84b88c&time=2026-09-09T01:19:18.138Z'
+            next_page = data.get("nextPagePath")
+            if not next_page:
+                break
+
+            endpoint = str(next_page).replace("/api/v0/equity/", "")
+            params = None
+
+            requests_count += 1
+
+            # Trading212: 6 req / minute
+            if requests_count >= 1:
+                # sleep(60)
+                break
+                requests_count = 0
+            else:
+                sleep(10)
+
+        return sorted(
+            cashflows,
+            key=lambda x: x.datetime,
+        )
 
     def transactions(self) -> list[CashFlow]:
 

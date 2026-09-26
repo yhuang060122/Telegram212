@@ -10,7 +10,7 @@ from app.domain.cashflow import CashFlow, CashFlowType
 from app.domain.earnings import EarningsEvent
 from app.domain.macro import MacroData
 from app.domain.news import NewsItem
-from app.domain.portfolio import Portfolio
+from app.domain.portfolio import Portfolio, PortfolioSnapshot
 from app.domain.position import Position
 from app.domain.report import Report
 
@@ -137,7 +137,7 @@ class SupabaseClient:
             for e in earnings
         ]
 
-        self.db.table("earnings").upsert(rows, on_conflict="ticker,earnings_date").execute()
+        self.db.table("earnings").upsert(rows, on_conflict="ticker,earnings_date,session").execute()
 
     # ---------------------------------
     # Macro
@@ -251,9 +251,8 @@ class SupabaseClient:
             for row in rows
         ]
 
-    def history(self, days: int = 30):
-
-        return (
+    def history(self, days: int = 30) -> list[PortfolioSnapshot]:
+        rows = (
             self.db.table("snapshots")
             .select("*")
             .order("snapshot_date", desc=False)
@@ -261,6 +260,20 @@ class SupabaseClient:
             .execute()
             .data
         )
+        return [
+            PortfolioSnapshot(
+                snapshot_date=row["snapshot_date"],
+                total_value=row["total_value"],
+                cash=row["cash"],
+                cash_ratio=row["cash_ratio"],
+                invested=row["invested"],
+                current_value=row["current_value"],
+                unrealized_pnl=row["unrealized_pnl"],
+                realized_pnl=row["realized_pnl"],
+                currency=row["currency"],
+            )
+            for row in rows
+        ]
 
     def position_history(self, ticker: str):
 
@@ -394,19 +407,17 @@ class SupabaseClient:
         ]
 
     def latest_cashflow_reference(self) -> str | None:
-        """
-        Return the newest Trading212 transaction reference stored locally.
-        """
 
         result = (
-            self.db.table("cashflows")
+            self.db
+            .table("cashflows")
             .select("reference")
             .order("datetime", desc=True)
             .limit(1)
             .execute()
         )
 
-        if not result.data:
-            return None
+        if result.data:
+            return result.data[0]["reference"]
 
-        return result.data[0]["reference"]
+        return None

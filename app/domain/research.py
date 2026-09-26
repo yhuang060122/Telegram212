@@ -4,18 +4,7 @@ from .earnings import EarningsEvent
 from .macro import MacroData
 from .news import NewsItem
 from .portfolio import Portfolio
-
-
-class CollectorStatus(BaseModel):
-    """Status of each external data collector."""
-
-    model_config = ConfigDict(frozen=True)
-
-    status: str
-
-    count: int = 0
-
-    error: str | None = None
+from .validation import CollectorStatus
 
 
 class ResearchContext(BaseModel):

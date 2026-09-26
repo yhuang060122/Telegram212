@@ -1,4 +1,4 @@
-from app.domain.portfolio import Portfolio
+from app.domain.portfolio import Portfolio, PortfolioSnapshot
 from app.domain.position import Position
 from app.domain.report import Report
 
@@ -164,7 +164,7 @@ class Formatter:
     def stock_analysis(
             position: Position,
             report: Report,
-            history: list[dict],
+            pos_history: list[dict],
     ):
 
         portfolio_view = report.portfolio_rating
@@ -180,10 +180,10 @@ class Formatter:
 
         trend = "N/A"
 
-        if len(history) >= 2:
+        if len(pos_history) >= 2:
 
-            first = history[0]["weight"]
-            last = history[-1]["weight"]
+            first = pos_history[0]["weight"]
+            last = pos_history[-1]["weight"]
 
             if last > first:
                 trend = "Increasing 📈"
@@ -270,7 +270,7 @@ class Formatter:
     def market_close(
             portfolio: Portfolio,
             report: Report | None,
-            history: list[dict],
+            history: list[PortfolioSnapshot],
     ):
 
         today = history[-1] if history else None
@@ -281,13 +281,13 @@ class Formatter:
 
         if today and yesterday:
             change = (
-                    today["total_value"]
-                    - yesterday["total_value"]
+                    today.total_value
+                    - yesterday.total_value
             )
 
             pct = (
                     change
-                    / yesterday["total_value"]
+                    / yesterday.total_value
                     * 100
             )
 

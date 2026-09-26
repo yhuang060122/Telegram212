@@ -1,10 +1,10 @@
-from app.infrastructure.trading212 import Trading212Client
 from app.logger import log
 from app.repository import Repository
 from app.services.ai_analysis_service import AIAnalysisService
 from app.services.analytics_service import AnalyticsService
 from app.services.portfolio_service import PortfolioService
 from app.services.research_service import ResearchService
+from app.services.validation_service import ValidationService
 
 
 class DailyPipeline:
@@ -13,12 +13,12 @@ class DailyPipeline:
     def __init__(self):
 
         self.repo = Repository()
-        self.trading212 = Trading212Client()
 
         self.portfolio_service = PortfolioService()
         self.research_service = ResearchService()
         self.analyst_service = AIAnalysisService()
         self.analytics_service = AnalyticsService()
+        self.validator = ValidationService()
 
     def run(self):
         """
@@ -66,18 +66,21 @@ class DailyPipeline:
         # Portfolio Analytics
         # =====================================================
 
-        # CashFlows
-        cashflows = self.trading212.transactions()
-        self.repo.save_cashflows(cashflows)
+        self.portfolio_service.sync_cashflows()
 
         # History
         history = self.repo.history(365)
         cashflows = self.repo.cashflows(365)
 
-        log.success(
-            "Cashflows",
-            f"{len(cashflows)} cashflows",
-        )
+        quality = self.validator.validate_history(history)
+
+        if not quality.valid:
+            raise ValueError(quality.issues)
+
+        if quality.issues:
+            log.warning("Data Quality", f"{','.join(map(str, quality.issues))}")
+
+        history = quality.cleaned
 
         analytics = self.analytics_service.calculate(
             portfolio=portfolio,

@@ -14,7 +14,7 @@ from app.domain.analytics import (
     RiskMetrics, ConcentrationMetrics,
 )
 from app.domain.cashflow import CashFlow
-from app.domain.portfolio import Portfolio
+from app.domain.portfolio import Portfolio, PortfolioSnapshot
 
 
 class AnalyticsService:
@@ -22,7 +22,7 @@ class AnalyticsService:
 
     def calculate(self,
                   portfolio: Portfolio,
-                  history: list[dict],
+                  history: list[PortfolioSnapshot],
                   cashflows: list[CashFlow],
                   ) -> PortfolioAnalytics:
         return PortfolioAnalytics(
@@ -41,7 +41,7 @@ class AnalyticsService:
     def _performance(
             self,
             portfolio: Portfolio,
-            history: list[dict],
+            history: list[PortfolioSnapshot],
             cashflows: list[CashFlow],
     ) -> PerformanceMetrics:
 
@@ -60,7 +60,7 @@ class AnalyticsService:
 
     # ---------- Risk ----------
 
-    def _risk(self, portfolio: Portfolio, history: list[dict]) -> RiskMetrics:
+    def _risk(self, portfolio: Portfolio, history: list[PortfolioSnapshot]) -> RiskMetrics:
 
         drawdown, max_drawdown = self._drawdown_metrics(history)
         hhi = self._herfindahl(portfolio)
@@ -162,7 +162,7 @@ class AnalyticsService:
         return "Low"
 
     @staticmethod
-    def _daily_returns(history: list[dict]) -> list[float]:
+    def _daily_returns(history: list[PortfolioSnapshot]) -> list[float]:
 
         if len(history) < 2:
             return []
@@ -170,17 +170,17 @@ class AnalyticsService:
         returns = []
 
         for prev, curr in zip(history[:-1], history[1:]):
-            prev_value = prev["total_value"]
+            prev_value = prev.total_value
             if prev_value == 0:
                 continue
 
-            r = (curr["total_value"] - prev_value) / prev_value
+            r = (curr.total_value - prev_value) / prev_value
 
             returns.append(r)
 
         return returns
 
-    def _volatility(self, history: list[dict]) -> float | None:
+    def _volatility(self, history: list[PortfolioSnapshot]) -> float | None:
         returns = self._daily_returns(history)
         if len(returns) < 2:
             return None
@@ -193,7 +193,7 @@ class AnalyticsService:
 
     def _sharpe(
             self,
-            history: list[dict],
+            history: list[PortfolioSnapshot],
             risk_free_rate: float = 0.02,
     ) -> float | None:
 
@@ -222,17 +222,17 @@ class AnalyticsService:
         return round(sharpe, 2)
 
     @staticmethod
-    def _drawdown_metrics(history: list[dict]) -> tuple[float | None, float | None]:
+    def _drawdown_metrics(history: list[PortfolioSnapshot]) -> tuple[float | None, float | None]:
         if not history:
             return None, None
 
-        peak = history[0]["total_value"]
+        peak = history[0].total_value
 
         current_dd = 0.0
         max_dd = 0.0
 
         for row in history:
-            value = row["total_value"]
+            value = row.total_value
             peak = max(peak, value)
             dd = (value - peak) / peak * 100
             current_dd = dd
@@ -241,15 +241,15 @@ class AnalyticsService:
         return round(current_dd, 2), round(max_dd, 2)
 
     @staticmethod
-    def _period_return(history: list[dict], periods: int) -> float | None:
+    def _period_return(history: list[PortfolioSnapshot], periods: int) -> float | None:
         if len(history) <= periods:
             return None
 
         if len(history) <= periods:
             return None
 
-        start = history[-(periods + 1)]["total_value"]
-        end = history[-1]["total_value"]
+        start = history[-(periods + 1)].total_value
+        end = history[-1].total_value
 
         if start == 0:
             return None
@@ -285,7 +285,7 @@ class AnalyticsService:
 
     @staticmethod
     def _twr(
-            history: list[dict],
+            history: list[PortfolioSnapshot],
             cashflows: list[CashFlow],
     ) -> float | None:
 
@@ -303,10 +303,10 @@ class AnalyticsService:
 
         for prev, curr in zip(history[:-1], history[1:]):
 
-            start = prev["total_value"]
-            end = curr["total_value"]
+            start = prev.total_value
+            end = curr.total_value
 
-            flow = flows.get(curr["snapshot_date"], 0.0)
+            flow = flows.get(curr.snapshot_date, 0.0)
 
             adjusted_end = end - flow
 
