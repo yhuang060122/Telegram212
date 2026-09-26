@@ -3,29 +3,31 @@ from pathlib import Path
 
 from app.domain.portfolio import Portfolio
 from app.domain.position import Position
+from app.infrastructure.supabase import SupabaseClient
 from app.infrastructure.trading212 import Trading212Client
+from app.logger import log
+
 
 class PortfolioService:
 
     def __init__(self):
         self.client = Trading212Client()
+        self.db = SupabaseClient()
 
         path = Path("data/sectors.json")
 
         self.sectors = (json.loads(path.read_text()) if path.exists() else {})
 
     def build(self) -> Portfolio:
-
         summary = self.client.account_summary()
 
         raw_positions = self.client.positions()
 
-        total_current =float(summary["investments"]["currentValue"])
+        total_current = float(summary["investments"]["currentValue"])
 
         positions = []
 
         for raw in raw_positions:
-
             instrument = raw["instrument"]
             impact = raw["walletImpact"]
 
@@ -80,4 +82,16 @@ class PortfolioService:
                 summary["investments"]["realizedProfitLoss"]
             ),
             positions=positions,
+        )
+
+    def sync_cashflows(self):
+        latest = self.db.latest_cashflow_reference()
+
+        flows = self.client.transactions_since(latest)
+
+        self.db.save_cashflows(flows)
+
+        log.success(
+            "Cashflows",
+            f"sync {len(flows)} cashflows",
         )

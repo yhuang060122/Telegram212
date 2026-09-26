@@ -1,6 +1,20 @@
+from datetime import date
+
 from pydantic import BaseModel, ConfigDict
 
 from .position import Position
+
+
+class PortfolioSnapshot(BaseModel):
+    snapshot_date: date
+    total_value: float
+    cash: float
+    cash_ratio: float
+    invested: float
+    current_value: float
+    unrealized_pnl: float
+    realized_pnl: float
+    currency: str
 
 
 class Portfolio(BaseModel):

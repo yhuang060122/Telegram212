@@ -2,7 +2,7 @@ from app.domain.cashflow import CashFlow
 from app.domain.earnings import EarningsEvent
 from app.domain.macro import MacroData
 from app.domain.news import NewsItem
-from app.domain.portfolio import Portfolio
+from app.domain.portfolio import Portfolio, PortfolioSnapshot
 from app.domain.position import Position
 from app.domain.report import Report
 from app.storage import Storage
@@ -61,7 +61,7 @@ class Repository:
     def today_news(self) -> list[NewsItem]:
         return self._db.today_news()
 
-    def history(self, days: int = 30):
+    def history(self, days: int = 30) -> list[PortfolioSnapshot]:
         return self._db.history(days)
 
     def position_history(self, ticker: str):

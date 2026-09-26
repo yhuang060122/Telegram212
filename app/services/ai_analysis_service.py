@@ -8,6 +8,7 @@ from google.genai import types
 from pydantic import ValidationError
 
 from app.domain.analytics import PortfolioAnalytics
+from app.domain.portfolio import PortfolioSnapshot
 from app.domain.report import Report
 from app.domain.research import ResearchContext
 from app.logger import log
@@ -35,17 +36,17 @@ class AIAnalysisService:
     def analyze(
             self,
             context: ResearchContext,
-            history: list[dict],
+            history: list[PortfolioSnapshot],
             analytics: PortfolioAnalytics,
     ) -> Report | None:
 
         payload = {
-            "portfolio": context.portfolio.model_dump(),
-            "analytics": analytics.model_dump(),
-            "news": [n.model_dump() for n in context.news],
-            "earnings": [e.model_dump() for e in context.earnings],
-            "macro": context.macro.model_dump(),
-            "history": history,
+            "portfolio": context.portfolio.model_dump(mode="json"),
+            "analytics": analytics.model_dump(mode="json"),
+            "news": [n.model_dump(mode="json") for n in context.news],
+            "earnings": [e.model_dump(mode="json") for e in context.earnings],
+            "macro": context.macro.model_dump(mode="json"),
+            "history": [h.model_dump(mode="json") for h in history],
         }
 
         for model in self.MODELS:
