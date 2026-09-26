@@ -1,5 +1,5 @@
 import json
-from types import SimpleNamespace
+
 
 def to_json(obj):
     res = json.dumps(obj, default=lambda o: o.__dict__)

@@ -1,11 +1,5 @@
 from .formatter import Formatter
-from .handlers import (
-    daily,
-    portfolio,
-    risk,
-    history,
-    analyze_stock
-)
+from .handlers import analyze_stock, daily, history, portfolio, risk
 
 
 class CommandRouter:

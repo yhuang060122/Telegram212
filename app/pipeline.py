@@ -16,9 +16,9 @@ class DailyPipeline:
 
         self.portfolio_service = PortfolioService()
         self.research_service = ResearchService()
-        self.analyst_service = AIAnalysisService()
+        self.ai_service = AIAnalysisService()
         self.analytics_service = AnalyticsService()
-        self.validator = ValidationService()
+        self.validation_service = ValidationService()
 
     def run(self):
         """
@@ -72,7 +72,7 @@ class DailyPipeline:
         history = self.repo.history(365)
         cashflows = self.repo.cashflows(365)
 
-        quality = self.validator.validate_history(history)
+        quality = self.validation_service.validate_history(history)
 
         if not quality.valid:
             raise ValueError(quality.issues)
@@ -94,7 +94,7 @@ class DailyPipeline:
 
         history = self.repo.history(30)
 
-        report = self.analyst_service.analyze(
+        report = self.ai_service.analyze(
             context=context,
             history=history,
             analytics=analytics,
