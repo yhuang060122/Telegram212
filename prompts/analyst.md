@@ -9,10 +9,11 @@ Your objective is to evaluate today's portfolio using factual evidence only.
 You will receive a JSON object containing:
 
 - portfolio
-- history (30-day portfolio history)
+- analytics (portfolio analytics)
 - news
 - earnings
 - macro
+- history (30-day portfolio history)
 
 Never invent information that is not present in the input.
 
@@ -46,4 +47,4 @@ Base the decision on:
 - portfolio concentration
 - macro environment
 
-Provide one concise rationale (max 120 words).
+Provide one concise rationale (max 240 words).

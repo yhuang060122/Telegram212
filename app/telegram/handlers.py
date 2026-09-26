@@ -74,10 +74,50 @@ def history(message: str):
 # /risk
 # =====================================================
 
-def risk():
-    return Formatter.risk(
-        load_portfolio()
+def risk(self):
+    ptf = self.portfolio_service.build()
+
+    hsy = self.repo.history(365)
+    cashflows = self.repo.cashflows(365)
+
+    analytics = self.analytics_service.calculate(
+        ptf,
+        hsy,
+        cashflows,
     )
+
+    return Formatter.risk(analytics)
+
+
+# =====================================================
+# /performance
+# =====================================================
+def performance(analytics):
+    p = analytics.performance
+
+    return f"""
+        📈 *Performance Metrics*
+        
+        Daily
+        {p.daily_return:+.2f}%
+        
+        Weekly
+        {p.weekly_return:+.2f}%
+        
+        Monthly
+        {p.monthly_return:+.2f}%
+        
+        ━━━━━━━━━━
+        
+        Total Return
+        {p.total_return:+.2f}%
+        
+        TWR
+        {p.twr:+.2f}%
+        
+        XIRR
+        {p.xirr:+.2f}%
+        """.strip()
 
 
 # =====================================================

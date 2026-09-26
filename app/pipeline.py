@@ -12,13 +12,13 @@ class DailyPipeline:
 
     def __init__(self):
 
+        self.repo = Repository()
+        self.trading212 = Trading212Client()
+
         self.portfolio_service = PortfolioService()
         self.research_service = ResearchService()
         self.analyst_service = AIAnalysisService()
-        self.trading212 = Trading212Client()
         self.analytics_service = AnalyticsService()
-
-        self.repo = Repository()
 
     def run(self):
         """
@@ -68,13 +68,16 @@ class DailyPipeline:
 
         # CashFlows
         cashflows = self.trading212.transactions()
-
         self.repo.save_cashflows(cashflows)
 
         # History
         history = self.repo.history(365)
-
         cashflows = self.repo.cashflows(365)
+
+        log.success(
+            "Cashflows",
+            f"{len(cashflows)} cashflows",
+        )
 
         analytics = self.analytics_service.calculate(
             portfolio=portfolio,
@@ -91,6 +94,7 @@ class DailyPipeline:
         report = self.analyst_service.analyze(
             context=context,
             history=history,
+            analytics=analytics,
         )
 
         if report:
@@ -113,4 +117,4 @@ class DailyPipeline:
         # Done
         # =====================================================
 
-        return portfolio, report, history
+        return portfolio, analytics, report, history

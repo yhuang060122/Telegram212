@@ -24,72 +24,71 @@ class Formatter:
         return "\n".join([
             "",
             "📡 *Data Sources*",
-            f"Trading212  {icon.get(s.trading212,'➖')}",
-            f"Finnhub     {icon.get(s.finnhub,'➖')}",
-            f"FRED        {icon.get(s.fred,'➖')}",
-            f"Gemini      {icon.get(s.gemini,'➖')}",
+            f"Trading212  {icon.get(s.trading212, '➖')}",
+            f"Finnhub     {icon.get(s.finnhub, '➖')}",
+            f"FRED        {icon.get(s.fred, '➖')}",
+            f"Gemini      {icon.get(s.gemini, '➖')}",
         ])
+
+    @staticmethod
+    def pct(value: float | None) -> str:
+        """Format percentage, displaying N/A when unavailable."""
+        if value is None:
+            return "N/A"
+
+        return f"{value:+.2f}%"
 
     # =====================================================
     # Daily
     # =====================================================
-
     @staticmethod
-    def daily(portfolio: Portfolio, report: Report | None):
+    def daily(portfolio, analytics, report):
 
-        if report is None:
+        c = analytics.risk.concentration
+        p = analytics.performance
+        r = analytics.risk
 
-            return "\n".join([
-                "🕐 *Daily Portfolio Report*",
-                "",
-                f"💰 Portfolio: €{portfolio.total_value:,.0f}",
-                f"💵 Cash: {portfolio.cash_ratio:.1f}%",
-                "",
-                "⚠️ *AI analysis is temporarily unavailable.*",
-                "Market data updated successfully.",
-            ])
-
-        p = report.portfolio_rating
-
-        emoji = {
-            "Positive": "🟢",
-            "Neutral": "🟡",
-            "Negative": "🔴",
-        }[p.overall_sentiment]
-
-        lines = [
-            "📊 *AI Daily Brief*",
-            "",
-            f"💰 Portfolio: €{portfolio.total_value:,.0f}",
-            f"💵 Cash: {portfolio.cash_ratio:.1f}%",
-            "",
-            f"📈 Sentiment: {emoji} *{p.overall_sentiment}*",
-            "",
-            p.summary,
-        ]
-
-        if report.positions_ratings:
-
-            lines += ["", "🧠 *Top Ideas*"]
-
-            for stock in report.positions_ratings[:5]:
-
-                e = {
-                    "Buy": "🟢",
-                    "Hold": "🟡",
-                    "Reduce": "🔴",
-                    "Sell": "🔴",
-                }[stock.rating]
-
-                ticker = stock.ticker.replace("_US_EQ", "")
-
-                lines.append(
-                    f"{e} *{ticker}* — {stock.rating}"
-                )
-
-        lines.append(Formatter.data_sources(report))
-
-        return "\n".join(lines)
+        return f"""
+            📊 *Daily Portfolio Report*
+        
+            💼 Value: €{portfolio.total_value:,.0f}
+            💰 Cash: {portfolio.cash_ratio:.1f}%
+        
+            ━━━━━━━━━━
+        
+            📈 *Performance*
+        
+            Today: {Formatter.pct(p.daily_return)}
+            Week : {Formatter.pct(p.weekly_return)}
+            Month: {Formatter.pct(p.monthly_return)}
+        
+            TWR  : {Formatter.pct(p.twr)}
+            XIRR : {Formatter.pct(p.xirr)}
+        
+            ━━━━━━━━━━
+        
+            ⚠️ *Risk*
+        
+            Drawdown : {Formatter.pct(r.drawdown)}
+            Max DD   : {Formatter.pct(r.max_drawdown)}
+        
+            Volatility: {Formatter.pct(r.volatility)}
+            Sharpe    : {"N/A" if r.sharpe is None else f"{r.sharpe:.2f}"}
+        
+            ━━━━━━━━━━
+        
+            🏦 *Allocation*
+        
+            Top 5 : {c.top5:.1f}%
+            HHI   : {c.herfindahl:.3f}
+            Risk  : {c.risk_level}
+        
+            ━━━━━━━━━━
+        
+            🤖 *AI Summary*
+        
+            {report.portfolio_rating.summary if report else "Unavailable"}
+            """.strip()
 
     # =====================================================
     # Portfolio
@@ -111,11 +110,10 @@ class Formatter:
         ]
 
         for i, p in enumerate(portfolio.top_positions[:10], start=1):
-
             emoji = "🟢" if p.return_pct >= 0 else "🔴"
 
             text.append(
-                f"{i}. *{p.ticker.replace('_US_EQ','')}* `{p.weight:.1f}%`"
+                f"{i}. *{p.ticker.replace('_US_EQ', '')}* `{p.weight:.1f}%`"
             )
 
             text.append(
@@ -129,48 +127,34 @@ class Formatter:
     # =====================================================
 
     @staticmethod
-    def risk(portfolio: Portfolio):
+    def risk(analytics):
 
-        concentration = portfolio.concentration
+        c = analytics.risk.concentration
 
-        risk = concentration["risk"]
-
-        emoji = {
-            "Low": "🟢",
-            "Medium": "🟡",
-            "High": "🔴",
-        }[risk]
-
-        cash = portfolio.cash_ratio
-
-        if cash < 5:
-            cash_text = "Very Low"
-        elif cash < 15:
-            cash_text = "Healthy"
-        else:
-            cash_text = "Defensive"
-
-        lines = [
-            "*⚠️ Portfolio Risk Report*",
-            "",
-            f"Overall Risk : {emoji} *{risk}*",
-            "",
-            "*Concentration*",
-            f"• Top 5 Holdings : *{concentration['top5_weight']:.1f}%*",
-            "",
-            "*Liquidity*",
-            f"• Cash Ratio : *{cash:.1f}%* ({cash_text})",
-            "",
-            "*Largest Positions*",
-        ]
-
-        for p in portfolio.top_positions[:5]:
-
-            lines.append(
-                f"• {p.ticker.replace('_US_EQ','')} — {p.weight:.1f}%"
-            )
-
-        return "\n".join(lines)
+        return f"""
+            ⚠️ *Portfolio Risk*
+        
+            Current DD
+            {analytics.risk.drawdown:.2f}%
+        
+            Max DD
+            {analytics.risk.max_drawdown:.2f}%
+        
+            Volatility
+            {analytics.risk.volatility:.2f}%
+        
+            Sharpe
+            {analytics.risk.sharpe:.2f}
+        
+            ━━━━━━━━━━
+        
+            Top1  {c.top1:.1f}%
+            Top3  {c.top3:.1f}%
+            Top5  {c.top5:.1f}%
+        
+            HHI   {c.herfindahl:.3f}
+            Risk  {c.risk_level}
+            """.strip()
 
     # =====================================================
     # Stock Analysis
@@ -178,9 +162,9 @@ class Formatter:
 
     @staticmethod
     def stock_analysis(
-        position: Position,
-        report: Report,
-        history: list[dict],
+            position: Position,
+            report: Report,
+            history: list[dict],
     ):
 
         portfolio_view = report.portfolio_rating
@@ -266,7 +250,6 @@ class Formatter:
         ]
 
         for row in history:
-
             lines.append(
                 f"`{row['snapshot_date'][5:]}`  {row['quantity']:.0f} sh   {row['weight']:.1f}%"
             )
@@ -285,9 +268,9 @@ class Formatter:
 
     @staticmethod
     def market_close(
-        portfolio: Portfolio,
-        report: Report | None,
-        history: list[dict],
+            portfolio: Portfolio,
+            report: Report | None,
+            history: list[dict],
     ):
 
         today = history[-1] if history else None
@@ -297,16 +280,15 @@ class Formatter:
         pct = 0
 
         if today and yesterday:
-
             change = (
-                today["total_value"]
-                - yesterday["total_value"]
+                    today["total_value"]
+                    - yesterday["total_value"]
             )
 
             pct = (
-                change
-                / yesterday["total_value"]
-                * 100
+                    change
+                    / yesterday["total_value"]
+                    * 100
             )
 
         emoji = "🟢" if change >= 0 else "🔴"
@@ -322,13 +304,11 @@ class Formatter:
         ]
 
         for p in portfolio.top_positions[:5]:
-
             lines.append(
-                f"• {p.ticker.replace('_US_EQ','')}  {p.weight:.1f}%"
+                f"• {p.ticker.replace('_US_EQ', '')}  {p.weight:.1f}%"
             )
 
         if report:
-
             lines += [
                 "",
                 "*AI Closing View*",

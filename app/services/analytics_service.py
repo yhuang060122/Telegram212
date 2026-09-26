@@ -162,7 +162,7 @@ class AnalyticsService:
         return "Low"
 
     @staticmethod
-    def _daily_returns(self, history: list[dict]) -> list[float]:
+    def _daily_returns(history: list[dict]) -> list[float]:
 
         if len(history) < 2:
             return []
@@ -222,7 +222,7 @@ class AnalyticsService:
         return round(sharpe, 2)
 
     @staticmethod
-    def _drawdown_metrics(self, history: list[dict]) -> tuple[float | None, float | None]:
+    def _drawdown_metrics(history: list[dict]) -> tuple[float | None, float | None]:
         if not history:
             return None, None
 
@@ -241,7 +241,10 @@ class AnalyticsService:
         return round(current_dd, 2), round(max_dd, 2)
 
     @staticmethod
-    def _period_return(self, history: list[dict], periods: int) -> float | None:
+    def _period_return(history: list[dict], periods: int) -> float | None:
+        if len(history) <= periods:
+            return None
+
         if len(history) <= periods:
             return None
 
