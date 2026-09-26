@@ -1,8 +1,10 @@
+from app.infrastructure.trading212 import Trading212Client
+from app.logger import log
+from app.repository import Repository
+from app.services.ai_analysis_service import AIAnalysisService
+from app.services.analytics_service import AnalyticsService
 from app.services.portfolio_service import PortfolioService
 from app.services.research_service import ResearchService
-from app.services.analyst_service import AnalystService
-from app.repository import Repository
-from app.logger import log
 
 
 class DailyPipeline:
@@ -12,7 +14,9 @@ class DailyPipeline:
 
         self.portfolio_service = PortfolioService()
         self.research_service = ResearchService()
-        self.analyst_service = AnalystService()
+        self.analyst_service = AIAnalysisService()
+        self.trading212 = Trading212Client()
+        self.analytics_service = AnalyticsService()
 
         self.repo = Repository()
 
@@ -56,6 +60,26 @@ class DailyPipeline:
         log.success(
             "Research",
             f"{len(context.news)} news · {len(context.earnings)} earnings · marco",
+        )
+
+        # =====================================================
+        # Portfolio Analytics
+        # =====================================================
+
+        # CashFlows
+        cashflows = self.trading212.transactions()
+
+        self.repo.save_cashflows(cashflows)
+
+        # History
+        history = self.repo.history(365)
+
+        cashflows = self.repo.cashflows(365)
+
+        analytics = self.analytics_service.calculate(
+            portfolio=portfolio,
+            history=history,
+            cashflows=cashflows,
         )
 
         # =====================================================

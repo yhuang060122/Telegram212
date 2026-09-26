@@ -13,13 +13,13 @@ from app.logger import log
 
 load_dotenv()
 
-
 SYSTEM_PROMPT = open(
     "prompts/analyst.md",
     encoding="utf-8",
 ).read()
 
-class AnalystService:
+
+class AIAnalysisService:
     MODELS = [
         "gemini-3.7-flash",
         "gemini-3.5-flash",

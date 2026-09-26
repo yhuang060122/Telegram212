@@ -1,11 +1,11 @@
-from app.storage import Storage
-
-from app.domain.portfolio import Portfolio
-from app.domain.news import NewsItem
+from app.domain.cashflow import CashFlow
 from app.domain.earnings import EarningsEvent
 from app.domain.macro import MacroData
-from app.domain.report import Report
+from app.domain.news import NewsItem
+from app.domain.portfolio import Portfolio
 from app.domain.position import Position
+from app.domain.report import Report
+from app.storage import Storage
 
 
 class Repository:
@@ -42,6 +42,9 @@ class Repository:
     def save_report(self, report: Report):
         self._db.save_report(report)
 
+    def save_cashflows(self, cashflows: list[CashFlow]):
+        self._db.save_cashflows(cashflows)
+
     # =====================================================
     # Read
     # =====================================================
@@ -66,3 +69,9 @@ class Repository:
 
     def monthly_returns(self):
         return self._db.monthly_returns()
+
+    def cashflows(self, days: int = 365) -> list[CashFlow]:
+        return self._db.cashflows(days)
+
+    def latest_cashflow_reference(self) -> str | None:
+        return self._db.latest_cashflow_reference()
