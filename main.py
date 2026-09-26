@@ -1,17 +1,17 @@
+from app.logger import log
 from app.pipeline import DailyPipeline
 from app.telegram.bot import TelegramBot
 from app.telegram.formatter import Formatter
 
-from app.logger import log
 
 def main():
-
     pipeline = DailyPipeline()
 
-    portfolio, report, history = pipeline.run()
+    portfolio, analytics, report, history = pipeline.run()
 
     message = Formatter.daily(
         portfolio,
+        analytics,
         report
     )
 
@@ -21,6 +21,7 @@ def main():
         "Telegram",
         "Sent"
     )
+
 
 if __name__ == "__main__":
     main()

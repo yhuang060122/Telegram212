@@ -1,5 +1,7 @@
 from pydantic import BaseModel, ConfigDict
+
 from .position import Position
+
 
 class Portfolio(BaseModel):
     """Normalized Trading212 portfolio."""
@@ -43,14 +45,15 @@ class Portfolio(BaseModel):
             reverse=True,
         )
 
+    # TODO: use analytics_service
     @property
     def sector_allocation(self) -> dict[str, float]:
         allocation: dict[str, float] = {}
 
         for position in self.positions:
             allocation[position.sector] = (
-                allocation.get(position.sector, 0)
-                + position.market_value
+                    allocation.get(position.sector, 0)
+                    + position.market_value
             )
 
         return {
@@ -58,6 +61,7 @@ class Portfolio(BaseModel):
             for sector, value in allocation.items()
         }
 
+    # TODO: use analytics_service
     @property
     def concentration(self) -> dict[str, float | str]:
         weights = sorted(
@@ -88,17 +92,3 @@ class Portfolio(BaseModel):
             ),
             None,
         )
-
-    def position_weights(self):
-        weights = {}
-
-        for p in self.positions:
-            ticker = p.ticker
-            value = p.market_value
-
-            weights[ticker] = round(
-                value / self.total_value * 100,
-                2
-            )
-
-        return weights

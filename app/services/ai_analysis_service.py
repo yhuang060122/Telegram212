@@ -7,19 +7,20 @@ from google import genai
 from google.genai import types
 from pydantic import ValidationError
 
+from app.domain.analytics import PortfolioAnalytics
 from app.domain.report import Report
 from app.domain.research import ResearchContext
 from app.logger import log
 
 load_dotenv()
 
-
 SYSTEM_PROMPT = open(
     "prompts/analyst.md",
     encoding="utf-8",
 ).read()
 
-class AnalystService:
+
+class AIAnalysisService:
     MODELS = [
         "gemini-3.7-flash",
         "gemini-3.5-flash",
@@ -35,12 +36,15 @@ class AnalystService:
             self,
             context: ResearchContext,
             history: list[dict],
+            analytics: PortfolioAnalytics,
     ) -> Report | None:
 
         payload = {
-            "context": context.model_dump(
-                mode="json"
-            ),
+            "portfolio": context.portfolio.model_dump(),
+            "analytics": analytics.model_dump(),
+            "news": [n.model_dump() for n in context.news],
+            "earnings": [e.model_dump() for e in context.earnings],
+            "macro": context.macro.model_dump(),
             "history": history,
         }
 
@@ -78,7 +82,7 @@ class AnalystService:
 
             except Exception as e:
                 time.sleep(2)
-                log.warning("Analyze", f"{model} failed", )
+                log.warning("Analyze", f"{model} failed: {e}", )
 
         log.error("Analyze", "All Gemini models failed.")
         return None

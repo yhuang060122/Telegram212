@@ -7,6 +7,7 @@ from .handlers import (
     analyze_stock
 )
 
+
 class CommandRouter:
 
     def dispatch(self, text):
@@ -31,6 +32,9 @@ class CommandRouter:
 
         elif cmd == "/start":
             return Formatter.help()
+
+        # elif cmd == "/performance":
+        #     return performance()
 
         elif cmd == "/stock":
             if len(parts) < 2:

@@ -6,3 +6,4 @@ openai
 google-genai
 pandas
 supabase>=2.6.0
+pyxirr>=0.10.5

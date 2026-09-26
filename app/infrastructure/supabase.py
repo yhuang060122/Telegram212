@@ -1,18 +1,21 @@
 import os
-from datetime import date, timedelta
+from collections import defaultdict
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 
 from dotenv import load_dotenv
 from supabase import Client, create_client
-from collections import defaultdict
 
+from app.domain.cashflow import CashFlow, CashFlowType
+from app.domain.earnings import EarningsEvent
 from app.domain.macro import MacroData
 from app.domain.news import NewsItem
-from app.domain.earnings import EarningsEvent
 from app.domain.portfolio import Portfolio
-from app.domain.report import Report
 from app.domain.position import Position
+from app.domain.report import Report
 
 load_dotenv()
+
 
 class SupabaseClient:
 
@@ -24,7 +27,6 @@ class SupabaseClient:
         if not url or not key:
             raise ValueError("SUPABASE_URL or SUPABASE_SERVICE_KEY is missing.")
 
-
         self.db: Client = create_client(url, key)
 
     # ---------------------------------
@@ -32,8 +34,8 @@ class SupabaseClient:
     # ---------------------------------
 
     def save_snapshot(
-        self,
-        portfolio: Portfolio,
+            self,
+            portfolio: Portfolio,
     ):
 
         self.db.table("snapshots").upsert(
@@ -55,14 +57,13 @@ class SupabaseClient:
     # ---------------------------------
 
     def save_positions(
-        self,
-        portfolio: Portfolio,
+            self,
+            portfolio: Portfolio,
     ):
 
         rows = []
 
         for p in portfolio.positions:
-
             rows.append(
                 {
                     "snapshot_date": date.today().isoformat(),
@@ -89,8 +90,8 @@ class SupabaseClient:
     # ---------------------------------
 
     def save_news(
-        self,
-        news: list[NewsItem],
+            self,
+            news: list[NewsItem],
     ):
 
         if not news:
@@ -116,8 +117,8 @@ class SupabaseClient:
     # ---------------------------------
 
     def save_earnings(
-        self,
-        earnings: list[EarningsEvent],
+            self,
+            earnings: list[EarningsEvent],
     ):
 
         if not earnings:
@@ -154,8 +155,8 @@ class SupabaseClient:
     # ---------------------------------
 
     def save_report(
-        self,
-        report: Report,
+            self,
+            report: Report,
     ):
 
         self.db.table("reports").upsert(
@@ -166,6 +167,30 @@ class SupabaseClient:
                     report.portfolio_rating.overall_sentiment
                 ),
             }
+        ).execute()
+
+    def save_cashflows(
+            self,
+            cashflows: list[CashFlow],
+    ) -> None:
+
+        if not cashflows:
+            return
+
+        rows = [
+            {
+                "reference": c.reference,
+                "datetime": c.datetime.isoformat(),
+                "amount": float(c.amount),
+                "currency": c.currency,
+                "type": c.type.value,
+            }
+            for c in cashflows
+        ]
+
+        self.db.table("cashflows").upsert(
+            rows,
+            on_conflict="reference",
         ).execute()
 
     # ---------------------------------
@@ -339,3 +364,49 @@ class SupabaseClient:
             return True
         except Exception:
             return False
+
+    def cashflows(
+            self,
+            days: int = 365,
+    ) -> list[CashFlow]:
+
+        since = (
+                datetime.utcnow() - timedelta(days=days)
+        ).isoformat()
+
+        result = (
+            self.db.table("cashflows")
+            .select("*")
+            .gte("datetime", since)
+            .order("datetime")
+            .execute()
+        )
+
+        return [
+            CashFlow(
+                reference=row["reference"],
+                datetime=datetime.fromisoformat(row["datetime"]),
+                amount=Decimal(str(row["amount"])),
+                currency=row["currency"],
+                type=CashFlowType(row["type"]),
+            )
+            for row in result.data
+        ]
+
+    def latest_cashflow_reference(self) -> str | None:
+        """
+        Return the newest Trading212 transaction reference stored locally.
+        """
+
+        result = (
+            self.db.table("cashflows")
+            .select("reference")
+            .order("datetime", desc=True)
+            .limit(1)
+            .execute()
+        )
+
+        if not result.data:
+            return None
+
+        return result.data[0]["reference"]

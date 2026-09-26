@@ -1,8 +1,10 @@
+from app.infrastructure.trading212 import Trading212Client
+from app.logger import log
+from app.repository import Repository
+from app.services.ai_analysis_service import AIAnalysisService
+from app.services.analytics_service import AnalyticsService
 from app.services.portfolio_service import PortfolioService
 from app.services.research_service import ResearchService
-from app.services.analyst_service import AnalystService
-from app.repository import Repository
-from app.logger import log
 
 
 class DailyPipeline:
@@ -10,11 +12,13 @@ class DailyPipeline:
 
     def __init__(self):
 
+        self.repo = Repository()
+        self.trading212 = Trading212Client()
+
         self.portfolio_service = PortfolioService()
         self.research_service = ResearchService()
-        self.analyst_service = AnalystService()
-
-        self.repo = Repository()
+        self.analyst_service = AIAnalysisService()
+        self.analytics_service = AnalyticsService()
 
     def run(self):
         """
@@ -59,6 +63,29 @@ class DailyPipeline:
         )
 
         # =====================================================
+        # Portfolio Analytics
+        # =====================================================
+
+        # CashFlows
+        cashflows = self.trading212.transactions()
+        self.repo.save_cashflows(cashflows)
+
+        # History
+        history = self.repo.history(365)
+        cashflows = self.repo.cashflows(365)
+
+        log.success(
+            "Cashflows",
+            f"{len(cashflows)} cashflows",
+        )
+
+        analytics = self.analytics_service.calculate(
+            portfolio=portfolio,
+            history=history,
+            cashflows=cashflows,
+        )
+
+        # =====================================================
         # AI Analysis
         # =====================================================
 
@@ -67,6 +94,7 @@ class DailyPipeline:
         report = self.analyst_service.analyze(
             context=context,
             history=history,
+            analytics=analytics,
         )
 
         if report:
@@ -89,4 +117,4 @@ class DailyPipeline:
         # Done
         # =====================================================
 
-        return portfolio, report, history
+        return portfolio, analytics, report, history

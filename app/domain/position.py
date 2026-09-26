@@ -32,4 +32,7 @@ class Position(BaseModel):
     @computed_field
     @property
     def return_pct(self) -> float:
+        if self.cost == 0:
+            return 0.0
+
         return round(self.pnl / self.cost * 100, 2)
