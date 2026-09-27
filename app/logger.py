@@ -1,46 +1,98 @@
-import logging
-import sys
+from __future__ import annotations
+
+import os
+from datetime import datetime, timezone
+
+from dotenv import load_dotenv
+
+from app.loggers.console import ConsoleDestination
+from app.loggers.destination import (
+    LogEntry,
+    LogLevel,
+)
+from app.loggers.telegram import TelegramDestination
+
+load_dotenv()
 
 
-class PipelineLogger:
+class Logger:
+    ICON = {
+        LogLevel.INFO: "ℹ️",
+        LogLevel.SUCCESS: "✅",
+        LogLevel.WARNING: "⚠️",
+        LogLevel.ERROR: "❌",
+    }
 
     def __init__(self):
-        self.logger = logging.getLogger("telegram212")
 
-        if self.logger.handlers:
+        self.console = ConsoleDestination()
+
+        self.telegram = None
+        if os.getenv("ENABLE_TELEGRAM_LOG", "false").lower() == "true":
+            self.telegram = TelegramDestination()
+
+        self.entries: list[LogEntry] = []
+        self.started_at = datetime.now(timezone.utc)
+
+        self.failed = False
+
+    def _log(
+        self,
+        level: LogLevel,
+        component: str,
+        message: str,
+    ) -> None:
+
+        entry = LogEntry(
+            time=datetime.now(timezone.utc),
+            level=level,
+            component=component,
+            message=message,
+        )
+
+        self.entries.append(entry)
+
+        self.console.write(entry)
+
+    def info(self, component: str, message: str):
+        self._log(LogLevel.INFO, component, message)
+
+    def success(self, component: str, message: str):
+        self._log(LogLevel.SUCCESS, component, message)
+
+    def warning(self, component: str, message: str):
+        self._log(LogLevel.WARNING, component, message)
+
+    def error(self, component: str, message: str):
+        self._log(LogLevel.ERROR, component, message)
+
+    def flush(self, title: str = "Daily Pipeline"):
+
+        if self.telegram is None:
             return
 
-        self.logger.setLevel(logging.INFO)
+        duration = (datetime.now(timezone.utc) - self.started_at).total_seconds()
 
-        handler = logging.StreamHandler(sys.stdout)
+        header = f"❌ *{title} Failed*" if self.failed else f"📊 *{title} Completed*"
 
-        formatter = logging.Formatter(
-            "[%(asctime)s] %(message)s",
-            datefmt="%H:%M:%S",
-        )
+        lines = [header, ""]
 
-        handler.setFormatter(formatter)
+        for entry in self.entries:
+            t = entry.time.strftime("%H:%M")
+            icon = self.ICON[entry.level]
 
-        self.logger.addHandler(handler)
+            lines.append(f"`{t}` {icon} *{entry.component}*")
+            lines.append(entry.message)
+            lines.append("")
 
-    def info(self, module: str, message: str):
-        self.logger.info(
-            f"{module:<12} - {message}"
-        )
+        lines.append("---")
+        lines.append(f"⏱ Duration: `{duration:.1f}s`")
 
-    def success(self, module: str, message: str):
-        self.logger.info(
-            f"{module:<12} ✓ {message}"
-        )
+        self.telegram.send_summary("\n".join(lines))
 
-    def warning(self, module: str, message: str):
-        self.logger.warning(
-            f"{module:<12} ⚠ {message}"
-        )
+        self.entries.clear()
+        self.failed = False
+        self.started_at = datetime.now(timezone.utc)
 
-    def error(self, module: str, message: str):
-        self.logger.error(
-            f"{module:<12} ✗ {message}"
-        )
 
-log = PipelineLogger()
+log = Logger()
