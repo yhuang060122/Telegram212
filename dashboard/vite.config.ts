@@ -12,4 +12,14 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    base: "/Telegram212/",
+    optimizeDeps: {
+      include: [
+        "@radix-ui/react-dialog",
+        "recharts",
+        "lucide-react",
+      ],
+    },
+  },
 });
