@@ -10,33 +10,115 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AiReportRouteImport } from './routes/ai-report'
+import { Route as AllocationRouteImport } from './routes/allocation'
+import { Route as HoldingsRouteImport } from './routes/holdings'
+import { Route as NewsRouteImport } from './routes/news'
+import { Route as PerformanceRouteImport } from './routes/performance'
+import { Route as RiskRouteImport } from './routes/risk'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiReportRoute = AiReportRouteImport.update({
+  id: '/ai-report',
+  path: '/ai-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AllocationRoute = AllocationRouteImport.update({
+  id: '/allocation',
+  path: '/allocation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HoldingsRoute = HoldingsRouteImport.update({
+  id: '/holdings',
+  path: '/holdings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerformanceRoute = PerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RiskRoute = RiskRouteImport.update({
+  id: '/risk',
+  path: '/risk',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-report': typeof AiReportRoute
+  '/allocation': typeof AllocationRoute
+  '/holdings': typeof HoldingsRoute
+  '/news': typeof NewsRoute
+  '/performance': typeof PerformanceRoute
+  '/risk': typeof RiskRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-report': typeof AiReportRoute
+  '/allocation': typeof AllocationRoute
+  '/holdings': typeof HoldingsRoute
+  '/news': typeof NewsRoute
+  '/performance': typeof PerformanceRoute
+  '/risk': typeof RiskRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ai-report': typeof AiReportRoute
+  '/allocation': typeof AllocationRoute
+  '/holdings': typeof HoldingsRoute
+  '/news': typeof NewsRoute
+  '/performance': typeof PerformanceRoute
+  '/risk': typeof RiskRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/ai-report'
+    | '/allocation'
+    | '/holdings'
+    | '/news'
+    | '/performance'
+    | '/risk'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/ai-report'
+    | '/allocation'
+    | '/holdings'
+    | '/news'
+    | '/performance'
+    | '/risk'
+  id:
+    | '__root__'
+    | '/'
+    | '/ai-report'
+    | '/allocation'
+    | '/holdings'
+    | '/news'
+    | '/performance'
+    | '/risk'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AiReportRoute: typeof AiReportRoute
+  AllocationRoute: typeof AllocationRoute
+  HoldingsRoute: typeof HoldingsRoute
+  NewsRoute: typeof NewsRoute
+  PerformanceRoute: typeof PerformanceRoute
+  RiskRoute: typeof RiskRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +130,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-report': {
+      id: '/ai-report'
+      path: '/ai-report'
+      fullPath: '/ai-report'
+      preLoaderRoute: typeof AiReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/allocation': {
+      id: '/allocation'
+      path: '/allocation'
+      fullPath: '/allocation'
+      preLoaderRoute: typeof AllocationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/holdings': {
+      id: '/holdings'
+      path: '/holdings'
+      fullPath: '/holdings'
+      preLoaderRoute: typeof HoldingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/performance': {
+      id: '/performance'
+      path: '/performance'
+      fullPath: '/performance'
+      preLoaderRoute: typeof PerformanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/risk': {
+      id: '/risk'
+      path: '/risk'
+      fullPath: '/risk'
+      preLoaderRoute: typeof RiskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AiReportRoute: AiReportRoute,
+  AllocationRoute: AllocationRoute,
+  HoldingsRoute: HoldingsRoute,
+  NewsRoute: NewsRoute,
+  PerformanceRoute: PerformanceRoute,
+  RiskRoute: RiskRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

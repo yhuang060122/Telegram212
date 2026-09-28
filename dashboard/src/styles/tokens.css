@@ -1,0 +1,58 @@
+/*
+ * Raw design tokens — dark-first investment terminal palette.
+ * All colors in oklch. Components never reference these directly;
+ * they use the semantic utilities mapped in theme.css.
+ */
+:root {
+  --radius: 1rem; /* 16px */
+
+  --background: oklch(0.155 0.008 250);
+  --foreground: oklch(0.93 0.006 250);
+  --surface: oklch(0.19 0.009 250);
+  --surface-raised: oklch(0.225 0.01 250);
+
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface-raised);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.8 0.15 75); /* terminal amber */
+  --primary-foreground: oklch(0.18 0.02 75);
+  --secondary: oklch(0.25 0.01 250);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.23 0.009 250);
+  --muted-foreground: oklch(0.64 0.015 250);
+  --accent: oklch(0.26 0.012 250);
+  --accent-foreground: var(--foreground);
+
+  --positive: oklch(0.74 0.16 155);
+  --negative: oklch(0.66 0.2 22);
+  --warning: oklch(0.8 0.15 75);
+  --info: oklch(0.72 0.12 235);
+  --destructive: var(--negative);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.8 0.15 75 / 60%);
+
+  --chart-1: oklch(0.8 0.15 75);
+  --chart-2: oklch(0.74 0.16 155);
+  --chart-3: oklch(0.72 0.12 235);
+  --chart-4: oklch(0.66 0.2 22);
+  --chart-5: oklch(0.7 0.14 300);
+
+  --sidebar: oklch(0.135 0.008 250);
+  --sidebar-foreground: oklch(0.8 0.01 250);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: oklch(0.21 0.01 250);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  --shadow-subtle: 0 1px 0 0 oklch(1 0 0 / 4%) inset;
+
+  --header-height: 3.5rem;
+  --sidebar-width: 14rem;
+}

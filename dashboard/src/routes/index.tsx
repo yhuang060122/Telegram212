@@ -1,23 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import Home from "@/pages/Home";
+import OverviewPage from "@/pages/Overview";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Trading212 AI Analyst" },
-      {
-        name: "description",
-        content: "AI analyst dashboard for your Trading212 portfolio.",
-      },
-      { property: "og:title", content: "Trading212 AI Analyst" },
-      {
-        property: "og:description",
-        content: "AI analyst dashboard for your Trading212 portfolio.",
-      },
+      { title: "Overview — Trading212 AI Analyst" },
+      { name: "description", content: "Portfolio overview in your Trading212 AI Analyst dashboard." },
+      { property: "og:title", content: "Overview — Trading212 AI Analyst" },
+      { property: "og:description", content: "Portfolio overview in your Trading212 AI Analyst dashboard." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Home,
+  component: OverviewPage,
 });
