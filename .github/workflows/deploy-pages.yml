@@ -36,9 +36,9 @@ jobs:
 
       - name: Verify static output
         run: |
-          test -f dist/client/index.html
+          test -f .output/public/index.html
           echo "Static entrypoint found:"
-          ls -la dist/client
+          ls -la .output/public
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
