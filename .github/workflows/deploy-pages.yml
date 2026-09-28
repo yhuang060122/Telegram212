@@ -2,7 +2,7 @@ name: Deploy Dashboard
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
     paths:
       - "dashboard/**"
       - ".github/workflows/deploy-pages.yml"
@@ -43,7 +43,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dashboard/dist/client
+          path: dashboard/.output/public
 
   deploy:
     needs: build

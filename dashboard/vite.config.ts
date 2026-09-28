@@ -11,15 +11,18 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    spa: {
+      enabled: true,
+      prerender: {
+        outputPath: "/index.html",
+        crawlLinks: false,
+      },
+    },
   },
   vite: {
     base: "/Telegram212/",
     optimizeDeps: {
-      include: [
-        "@radix-ui/react-dialog",
-        "recharts",
-        "lucide-react",
-      ],
+      include: ["@radix-ui/react-dialog", "recharts", "lucide-react"],
     },
   },
 });
