@@ -35,5 +35,10 @@ jobs:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
 
+          TG_FORUM_TOPICS_ID: ${{ secrets.TG_FORUM_TOPICS_ID }}
+          TG_TOPIC_ID: ${{ secrets.TG_TOPIC_ID }}
+
+          ENABLE_TELEGRAM_LOG: ${{ secrets.ENABLE_TELEGRAM_LOG }}
+
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}

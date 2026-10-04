@@ -19,3 +19,4 @@ class TelegramDestination(LogDestination):
 
     def send_summary(self, text: str) -> None:
         self.bot.send(text)
+        self.bot.send_to_logs_topic(text)
