@@ -1,9 +1,5 @@
 from __future__ import annotations
 
-import os
-
-import requests
-
 from app.telegram.bot import TelegramBot
 
 from .destination import LogDestination, LogEntry
@@ -19,4 +15,4 @@ class TelegramDestination(LogDestination):
 
     def send_summary(self, text: str) -> None:
         self.bot.send(text)
-        self.bot.send_to_logs_topic(text)
+        self.bot.send_to_logs(text)

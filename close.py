@@ -7,15 +7,10 @@ pipeline = DailyPipeline()
 
 portfolio, analytics, report, history = pipeline.run()
 
-message = Formatter.market_close(
-    portfolio=portfolio,
-    report=report,
-    history=history
-)
+message = Formatter.market_close(portfolio=portfolio, report=report, history=history)
 
-TelegramBot().send(message)
+bot = TelegramBot()
+bot.send(message)
+bot.send_to_market_close(message)
 
-log.success(
-    "✅ Market close report",
-    "Sent"
-)
+log.success("✅ Market close report", "Sent")

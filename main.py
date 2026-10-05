@@ -9,18 +9,14 @@ def main():
 
     portfolio, analytics, report, history = pipeline.run()
 
-    message = Formatter.daily(
-        portfolio,
-        analytics,
-        report
-    )
+    message = Formatter.daily(portfolio, analytics, report)
 
-    TelegramBot().send(message)
+    bot = TelegramBot()
 
-    log.success(
-        "Telegram",
-        "Sent"
-    )
+    bot.send(message)
+    bot.send_to_daily(message)
+
+    log.success("Telegram", "Sent")
 
 
 if __name__ == "__main__":
