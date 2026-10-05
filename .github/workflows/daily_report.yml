@@ -36,7 +36,9 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
 
           TG_FORUM_TOPICS_ID: ${{ secrets.TG_FORUM_TOPICS_ID }}
-          TG_TOPIC_ID: ${{ secrets.TG_TOPIC_ID }}
+          TG_TOPIC_LOGS_ID: ${{ secrets.TG_TOPIC_LOGS_ID }}
+          TG_TOPIC_DAILY_ID: ${{ secrets.TG_TOPIC_DAILY_ID }}
+          TG_TOPIC_MARKET_CLOSE_ID: ${{ secrets.TG_TOPIC_MARKET_CLOSE_ID }}
 
           ENABLE_TELEGRAM_LOG: ${{ secrets.ENABLE_TELEGRAM_LOG }}
 
