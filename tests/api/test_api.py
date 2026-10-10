@@ -50,6 +50,12 @@ class FakeRepository:
     def today_news(self):
         return []
 
+    def upcoming_earnings(self, days=30):
+        return []
+
+    def latest_macro(self):
+        return None
+
 
 class FakeAnalyticsService:
     def calculate(self, portfolio, history, cashflows):
@@ -117,3 +123,12 @@ def test_analytics_endpoint_uses_analytics_service():
     response = TestClient(app).get("/api/analytics")
     assert response.status_code == 200
     assert response.json()["performance"]["total_return"] == 5.0
+
+def test_positions_history_news_earnings_and_macro_endpoints():
+    client = TestClient(app)
+    assert client.get("/api/positions").json() == []
+    assert client.get("/api/positions/NVDA/history").json() == []
+    assert client.get("/api/news").json() == []
+    assert client.get("/api/earnings?days=14").json() == []
+    assert client.get("/api/earnings?days=400").status_code == 422
+    assert client.get("/api/macro/latest").json() is None
