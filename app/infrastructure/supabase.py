@@ -252,14 +252,16 @@ class SupabaseClient:
         ]
 
     def history(self, days: int = 30) -> list[PortfolioSnapshot]:
+        # Fetch the newest N snapshots, then return them chronologically.
         rows = (
             self.db.table("snapshots")
             .select("*")
-            .order("snapshot_date", desc=False)
+            .order("snapshot_date", desc=True)
             .limit(days)
             .execute()
             .data
         )
+        rows = list(reversed(rows))
         return [
             PortfolioSnapshot(
                 snapshot_date=row["snapshot_date"],
@@ -405,6 +407,46 @@ class SupabaseClient:
             )
             for row in result.data
         ]
+
+    def upcoming_earnings(self, days: int = 30) -> list[EarningsEvent]:
+        start = date.today()
+        end = start + timedelta(days=days)
+        rows = (
+            self.db.table("earnings")
+            .select("*")
+            .gte("earnings_date", start.isoformat())
+            .lte("earnings_date", end.isoformat())
+            .order("earnings_date")
+            .execute()
+            .data
+        )
+        return [
+            EarningsEvent(
+                ticker=row["ticker"],
+                company=row["company"],
+                earnings_date=row["earnings_date"],
+                session=row.get("session", "UNKNOWN"),
+                eps_estimate=row.get("eps_estimate"),
+                revenue_estimate=row.get("revenue_estimate"),
+            )
+            for row in rows
+        ]
+
+    def latest_macro(self) -> MacroData | None:
+        rows = (
+            self.db.table("macro")
+            .select("*")
+            .order("snapshot_date", desc=True)
+            .limit(1)
+            .execute()
+            .data
+        )
+        if not rows:
+            return None
+        fields = MacroData.model_fields.keys()
+        return MacroData.model_validate(
+            {key: rows[0].get(key) for key in fields}
+        )
 
     def latest_cashflow_reference(self) -> str | None:
 
