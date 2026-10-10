@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.api.dependencies import get_repository
 from app.repository import Repository
@@ -35,13 +35,12 @@ def latest_news(
 
     return [item.model_dump(mode="json") for item in news]
 
+
 @router.get("/earnings")
 def upcoming_earnings(
-    days: int = 30,
+    days: int = Query(default=30, ge=1, le=365),
     repository: Repository = Depends(get_repository),
 ) -> list[dict]:
-    if days < 1 or days > 365:
-        raise HTTPException(status_code=422, detail="days must be between 1 and 365")
     try:
         events = repository.upcoming_earnings(days)
     except Exception as exc:
