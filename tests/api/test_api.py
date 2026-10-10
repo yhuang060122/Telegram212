@@ -133,23 +133,18 @@ def test_positions_history_news_earnings_and_macro_endpoints():
     assert client.get("/api/earnings?days=400").status_code == 422
     assert client.get("/api/macro/latest").json() is None
 
-
-
 class UnhealthyRepository(FakeRepository):
     def health_check(self):
         return False
-
 
 class EmptyPortfolioRepository(FakeRepository):
     def latest_snapshot(self):
         return []
 
-
 def test_health_returns_503_when_database_is_unhealthy():
     app.dependency_overrides[get_repository] = UnhealthyRepository
     response = TestClient(app).get("/api/health")
     assert response.status_code == 503
-
 
 def test_analytics_returns_404_when_no_snapshot_exists():
     app.dependency_overrides[get_repository] = EmptyPortfolioRepository
