@@ -75,3 +75,9 @@ class Repository:
 
     def latest_cashflow_reference(self) -> str | None:
         return self._db.latest_cashflow_reference()
+
+    def upcoming_earnings(self, days: int = 30) -> list[EarningsEvent]:
+        return self._db.upcoming_earnings(days)
+
+    def latest_macro(self) -> MacroData | None:
+        return self._db.latest_macro()
