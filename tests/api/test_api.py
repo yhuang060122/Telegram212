@@ -1,5 +1,3 @@
-from datetime import date
-
 from fastapi.testclient import TestClient
 
 from app.api.dependencies import get_analytics_service, get_repository
