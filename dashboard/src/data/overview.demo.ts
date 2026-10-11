@@ -9,7 +9,7 @@ function sampleSeries(days: number, end: number, seed: number): EquityPoint[] {
   const points: EquityPoint[] = [];
   const endDate = new Date("2026-09-25T00:00:00Z");
   let s = seed;
-  const rand = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+  const rand = () => (s = (s * 9301 + 49297) % 233280) / 233280;
   let v = end * 0.86;
   const drift = (end - v) / days;
   for (let i = days; i >= 0; i--) {
@@ -20,7 +20,10 @@ function sampleSeries(days: number, end: number, seed: number): EquityPoint[] {
   }
   // Bend the random walk so it lands exactly on today's value.
   const gap = end - points[points.length - 1]!.value;
-  return points.map((p, i) => ({ ...p, value: Math.round((p.value + (gap * i) / days) * 100) / 100 }));
+  return points.map((p, i) => ({
+    ...p,
+    value: Math.round((p.value + (gap * i) / days) * 100) / 100,
+  }));
 }
 
 const year = sampleSeries(365, 48_732.4, 7);
@@ -29,11 +32,46 @@ export const overviewDemo: OverviewData = {
   currency: "EUR",
   lastUpdated: "2026-09-25T16:35:00Z",
   kpis: [
-    { id: "value", label: "Portfolio Value", value: 48732.4, format: "currency", tone: "neutral", hint: "Invested + cash" },
-    { id: "pl", label: "Today P/L", value: 312.85, format: "signedCurrency", tone: "positive", hint: "vs. previous close" },
-    { id: "pct", label: "Today %", value: 0.65, format: "signedPercent", tone: "positive", hint: "Daily change" },
-    { id: "ret", label: "Total Return", value: 14.2, format: "signedPercent", tone: "positive", hint: "Since first deposit" },
-    { id: "cash", label: "Cash Ratio", value: 6.8, format: "percent", tone: "neutral", hint: "€3,314 uninvested" },
+    {
+      id: "value",
+      label: "Portfolio Value",
+      value: 48732.4,
+      format: "currency",
+      tone: "neutral",
+      hint: "Invested + cash",
+    },
+    {
+      id: "pl",
+      label: "Today P/L",
+      value: 312.85,
+      format: "signedCurrency",
+      tone: "positive",
+      hint: "vs. previous close",
+    },
+    {
+      id: "pct",
+      label: "Today %",
+      value: 0.65,
+      format: "signedPercent",
+      tone: "positive",
+      hint: "Daily change",
+    },
+    {
+      id: "ret",
+      label: "Total Return",
+      value: 14.2,
+      format: "signedPercent",
+      tone: "positive",
+      hint: "Since first deposit",
+    },
+    {
+      id: "cash",
+      label: "Cash Ratio",
+      value: 6.8,
+      format: "percent",
+      tone: "neutral",
+      hint: "€3,314 uninvested",
+    },
   ],
   equityCurve: {
     "1M": year.slice(-31),
@@ -65,7 +103,13 @@ export const overviewDemo: OverviewData = {
     { ticker: "MSFT", name: "Microsoft Corp.", weight: 11.9, value: 5799.16, returnPct: 18.3 },
     { ticker: "ASML", name: "ASML Holding", weight: 9.7, value: 4727.04, returnPct: -4.6 },
     { ticker: "NOVO", name: "Novo Nordisk", weight: 8.6, value: 4190.99, returnPct: -9.1 },
-    { ticker: "VWCE", name: "Vanguard FTSE All-World", weight: 8.4, value: 4093.52, returnPct: 11.7 },
+    {
+      ticker: "VWCE",
+      name: "Vanguard FTSE All-World",
+      weight: 8.4,
+      value: 4093.52,
+      returnPct: 11.7,
+    },
   ],
   ai: {
     sentiment: "Neutral",

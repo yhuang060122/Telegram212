@@ -12,11 +12,19 @@ export function Header() {
       <div className="flex min-w-0 items-center gap-2">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="shrink-0 md:hidden" aria-label="Open navigation">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0 md:hidden"
+              aria-label="Open navigation"
+            >
               <Menu className="h-4 w-4" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[var(--sidebar-width)] border-sidebar-border bg-sidebar p-0">
+          <SheetContent
+            side="left"
+            className="w-[var(--sidebar-width)] border-sidebar-border bg-sidebar p-0"
+          >
             <SheetTitle className="sr-only">Navigation</SheetTitle>
             <SidebarNav onNavigate={() => setOpen(false)} />
           </SheetContent>

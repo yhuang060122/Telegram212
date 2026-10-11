@@ -38,7 +38,6 @@ export type AiSummary = {
   headline: string;
   summary: string;
   generatedAt: string;
-  isSample: true;
 };
 
 export type DataSource = {

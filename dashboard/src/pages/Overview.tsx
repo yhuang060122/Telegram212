@@ -5,7 +5,11 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { EquityCurveCard } from "@/components/overview/EquityCurveCard";
 import {
-  AiSummaryCard, DataSourcesCard, RiskSnapshotCard, SectorAllocationCard, TopHoldingsCard,
+  AiSummaryCard,
+  DataSourcesCard,
+  RiskSnapshotCard,
+  SectorAllocationCard,
+  TopHoldingsCard,
 } from "@/components/overview/OverviewPanels";
 import { overviewSource } from "@/lib/overview-source";
 import { formatDateTime, formatKpi } from "@/lib/format";
@@ -23,7 +27,14 @@ export default function OverviewPage() {
           <span className="hidden font-mono text-xs text-muted-foreground sm:inline">
             Updated <time dateTime={data.lastUpdated}>{formatDateTime(data.lastUpdated)}</time>
           </span>
-          <Button variant="outline" size="sm" disabled className="h-7 gap-1.5 text-xs" aria-label="Refresh (unavailable in demo)" title="Not live — demo data">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled
+            className="h-7 gap-1.5 text-xs"
+            aria-label="Refresh (unavailable in demo)"
+            title="Not live — demo data"
+          >
             <RefreshCw className="h-3.5 w-3.5" aria-hidden /> Refresh
           </Button>
         </div>
@@ -33,7 +44,10 @@ export default function OverviewPage() {
         Updated {formatDateTime(data.lastUpdated)}
       </p>
 
-      <section aria-label="Key metrics" className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+      <section
+        aria-label="Key metrics"
+        className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5"
+      >
         {data.kpis.map((k, i) => (
           <MetricCard
             key={k.id}

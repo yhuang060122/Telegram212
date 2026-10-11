@@ -19,7 +19,14 @@ const toneClass: Record<Tone, string> = {
   warning: "text-warning",
 };
 
-export function MetricCard({ label, value, hint, tone = "neutral", icon, className }: MetricCardProps) {
+export function MetricCard({
+  label,
+  value,
+  hint,
+  tone = "neutral",
+  icon,
+  className,
+}: MetricCardProps) {
   return (
     <div className={cn("rounded-lg border border-border bg-card p-4 shadow-subtle", className)}>
       <div className="flex items-center justify-between gap-2">

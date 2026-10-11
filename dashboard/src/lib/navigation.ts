@@ -11,14 +11,7 @@ import {
 
 export type NavEntry = {
   label: string;
-  to:
-    | "/"
-    | "/performance"
-    | "/allocation"
-    | "/holdings"
-    | "/risk"
-    | "/ai-report"
-    | "/news";
+  to: "/" | "/performance" | "/allocation" | "/holdings" | "/risk" | "/ai-report" | "/news";
   icon: LucideIcon;
 };
 
