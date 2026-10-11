@@ -11,18 +11,16 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    // Emit a static SPA shell at the output root so GitHub Pages can serve it.
     spa: {
       enabled: true,
-      prerender: {
-        outputPath: "/index.html",
-        crawlLinks: false,
-      },
+      prerender: { outputPath: "/index.html", crawlLinks: false },
     },
   },
   vite: {
-    base: "/Telegram212/",
-    optimizeDeps: {
-      include: ["@radix-ui/react-dialog", "recharts", "lucide-react"],
-    },
+    // Serve production assets from the GitHub Pages repo path.
+    base: process.env["GITHUB_ACTIONS"] === "true" ? "/Telegram212/" : "/",
+    // Pre-bundle the menu's slide-out panel with React so it never loads a second copy.
+    optimizeDeps: { include: ["@radix-ui/react-dialog", "recharts", "lucide-react"] },
   },
 });
