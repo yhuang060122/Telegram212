@@ -1,6 +1,7 @@
 from app.domain.position import Position
 from app.repository import Repository
 from app.services.ai_analysis_service import AIAnalysisService
+from app.services.analytics_service import AnalyticsService
 from app.services.portfolio_service import PortfolioService
 from app.services.research_service import ResearchService
 from app.telegram.formatter import Formatter
@@ -8,6 +9,7 @@ from app.telegram.formatter import Formatter
 portfolio_service = PortfolioService()
 research_service = ResearchService()
 analyst_service = AIAnalysisService()
+analytics_service = AnalyticsService()
 repo = Repository()
 
 
@@ -20,20 +22,28 @@ def load_portfolio():
 # /daily
 # =====================================================
 
+
 def daily():
     ptf = load_portfolio()
 
     context = research_service.build(ptf)
 
-    hty = repo.history(30)
+    history = repo.history(365)
+    cashflows = repo.cashflows(365)
+
+    analytics = analytics_service.calculate(
+        ptf,
+        history,
+        cashflows,
+    )
 
     report = analyst_service.analyze(
-        context=context,
-        history=hty,
+        context=context, history=history, analytics=analytics
     )
 
     return Formatter.daily(
         ptf,
+        analytics,
         report,
     )
 
@@ -42,15 +52,15 @@ def daily():
 # /portfolio
 # =====================================================
 
+
 def portfolio():
-    return Formatter.portfolio(
-        load_portfolio()
-    )
+    return Formatter.portfolio(load_portfolio())
 
 
 # =====================================================
 # /history NVDA
 # =====================================================
+
 
 def history(message: str):
     parts = message.split()
@@ -60,9 +70,7 @@ def history(message: str):
 
     ticker = parts[1].upper()
 
-    data = repo.position_history(
-        f"{ticker}_US_EQ"
-    )
+    data = repo.position_history(f"{ticker}_US_EQ")
 
     return Formatter.history(
         ticker,
@@ -74,15 +82,16 @@ def history(message: str):
 # /risk
 # =====================================================
 
-def risk(self):
-    ptf = self.portfolio_service.build()
 
-    hsy = self.repo.history(365)
-    cashflows = self.repo.cashflows(365)
+def risk():
+    ptf = load_portfolio()
 
-    analytics = self.analytics_service.calculate(
+    history = repo.history(365)
+    cashflows = repo.cashflows(365)
+
+    analytics = analytics_service.calculate(
         ptf,
-        hsy,
+        history,
         cashflows,
     )
 
@@ -124,6 +133,7 @@ def performance(analytics):
 # /stock NVDA
 # =====================================================
 
+
 def analyze_stock(ticker: str):
     ticker = ticker.upper()
 
@@ -131,9 +141,7 @@ def analyze_stock(ticker: str):
 
     ptf = load_portfolio()
 
-    position: Position | None = ptf.get_position(
-        full_ticker
-    )
+    position: Position | None = ptf.get_position(full_ticker)
 
     if position is None:
         return f"❌ *{ticker}* is not in your portfolio."
@@ -156,5 +164,5 @@ def analyze_stock(ticker: str):
     return Formatter.stock_analysis(
         position=position,
         report=report,
-        history=hty,
+        pos_history=hty,
     )

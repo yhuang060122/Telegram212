@@ -28,8 +28,8 @@ class ValidationService:
     # ---------------------------------------------------------
 
     def validate_history(
-            self,
-            history: Iterable[PortfolioSnapshot],
+        self,
+        history: Iterable[PortfolioSnapshot],
     ) -> DataQualityReport:
         """Validate historical snapshots and return cleaned history."""
 
@@ -65,8 +65,8 @@ class ValidationService:
         )
 
     def clean_history(
-            self,
-            history: Iterable[PortfolioSnapshot],
+        self,
+        history: Iterable[PortfolioSnapshot],
     ) -> list[PortfolioSnapshot]:
         """
         Sort snapshots and remove duplicated dates.
@@ -90,8 +90,8 @@ class ValidationService:
     # ---------------------------------------------------------
 
     def _check_positive_nav(
-            self,
-            history: list[PortfolioSnapshot],
+        self,
+        history: list[PortfolioSnapshot],
     ) -> list[DataQualityIssue]:
         issues = []
 
@@ -101,25 +101,20 @@ class ValidationService:
                     DataQualityIssue(
                         severity="error",
                         code="INVALID_NAV",
-                        message=(
-                            f"NAV must be positive "
-                            f"({s.snapshot_date})"
-                        ),
+                        message=(f"NAV must be positive ({s.snapshot_date})"),
                     )
                 )
 
         return issues
 
     def _check_date_gap(
-            self,
-            history: list[PortfolioSnapshot],
+        self,
+        history: list[PortfolioSnapshot],
     ) -> list[DataQualityIssue]:
         issues = []
 
-        for prev, curr in zip(history, history[1:]):
-            gap = (
-                    curr.snapshot_date - prev.snapshot_date
-            ).days
+        for prev, curr in zip(history[:-1], history[1:], strict=True):
+            gap = (curr.snapshot_date - prev.snapshot_date).days
 
             if gap > 5:
                 issues.append(
@@ -137,29 +132,23 @@ class ValidationService:
         return issues
 
     def _check_large_jump(
-            self,
-            history: list[PortfolioSnapshot],
+        self,
+        history: list[PortfolioSnapshot],
     ) -> list[DataQualityIssue]:
         issues = []
 
-        for prev, curr in zip(history, history[1:]):
-
+        for prev, curr in zip(history[:-1], history[1:], strict=True):
             if prev.total_value == 0:
                 continue
 
-            pct = (
-                          curr.total_value - prev.total_value
-                  ) / prev.total_value
+            pct = (curr.total_value - prev.total_value) / prev.total_value
 
             if abs(pct) >= self.jump_threshold:
                 issues.append(
                     DataQualityIssue(
                         severity="warning",
                         code="LARGE_NAV_JUMP",
-                        message=(
-                            f"{pct:.1%} NAV change on "
-                            f"{curr.snapshot_date}"
-                        ),
+                        message=(f"{pct:.1%} NAV change on {curr.snapshot_date}"),
                     )
                 )
 

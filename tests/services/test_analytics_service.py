@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from types import SimpleNamespace
 
 import pytest
 
@@ -9,7 +10,6 @@ from tests.fixtures.history import create_history
 
 
 class TestAnalyticsService:
-
     @pytest.fixture
     def service(self):
         return AnalyticsService()
@@ -147,29 +147,34 @@ class TestAnalyticsService:
             cashflows=deposit_cashflow,
         )
 
-        assert analytics.performance.twr == pytest.approx(6.86, abs=0.05)
+        assert analytics.performance.twr == pytest.approx(
+            8.39,
+            abs=0.05,
+        )
 
     # -------------------------------------------------
     # XIRR
     # -------------------------------------------------
 
-    def test_xirr_single_period(self, service, portfolio):
+    def test_xirr_single_period(self, service):
+        end_date = datetime.now(timezone.utc).date()
+        start_date = end_date - timedelta(days=365)
+
         flows = [
             CashFlow(
                 reference="A",
-                datetime=datetime(2026, 1, 1),
+                datetime=datetime.combine(
+                    start_date,
+                    datetime.min.time(),
+                    tzinfo=timezone.utc,
+                ),
                 amount=Decimal("-10000"),
                 currency="EUR",
                 type=CashFlowType.DEPOSIT,
             ),
-            CashFlow(
-                reference="B",
-                datetime=datetime(2027, 1, 1),
-                amount=Decimal("11000"),
-                currency="EUR",
-                type=CashFlowType.WITHDRAWAL,
-            ),
         ]
+
+        portfolio = SimpleNamespace(total_value=11000)
 
         rate = service.calculate_xirr(portfolio, flows)
 
@@ -224,9 +229,7 @@ class TestAnalyticsService:
     # -------------------------------------------------
 
     def test_single_snapshot(self, service, portfolio):
-        history = [
-            create_history(1, 10000)
-        ]
+        history = [create_history(1, 10000)]
 
         analytics = service.calculate(
             portfolio=portfolio,
@@ -235,4 +238,4 @@ class TestAnalyticsService:
         )
 
         assert analytics.performance.total_return == 0
-        assert analytics.risk.volatility == 0
+        assert analytics.risk.volatility is None

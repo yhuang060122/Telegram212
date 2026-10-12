@@ -4,29 +4,18 @@ from app.services.analytics_service import AnalyticsService
 
 
 class TestAllocationMetrics:
-
     @pytest.fixture
     def service(self):
         return AnalyticsService()
 
     def test_sector_allocation(self, service, portfolio):
-        """
-        Portfolio Fixture
-
-        NVDA 40%  Technology
-        MSFT 35%  Technology
-        AAPL 25%  Technology
-
-        Technology = 100%
-        """
-
         analytics = service.calculate(
             portfolio=portfolio,
             history=[],
             cashflows=[],
         )
 
-        sector = {}
+        sector = {item.name: item.weight for item in analytics.sector_allocation}
 
         assert len(sector) == 1
         assert sector["Technology"] == pytest.approx(100.0)
@@ -45,7 +34,9 @@ class TestAllocationMetrics:
             cashflows=[],
         )
 
-        assert analytics.risk.concentration.herfindahl == pytest.approx(0.345, abs=0.001)
+        assert analytics.risk.concentration.herfindahl == pytest.approx(
+            0.345, abs=0.001
+        )
 
     def test_concentration(self, service, portfolio):
         """
@@ -68,17 +59,15 @@ class TestAllocationMetrics:
         assert c.risk_level == "High"
 
     def test_single_sector(self, service, portfolio):
-        """
-        All positions are Technology.
-        """
-
         analytics = service.calculate(
             portfolio=portfolio,
             history=[],
             cashflows=[],
         )
 
-        assert list(analytics.risk.sector.keys()) == ["Technology"]
+        sectors = [item.name for item in analytics.sector_allocation]
+
+        assert sectors == ["Technology"]
 
     def test_concentration_bounds(self, service, portfolio):
         """

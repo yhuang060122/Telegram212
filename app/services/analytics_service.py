@@ -24,12 +24,13 @@ class AnalyticsService:
     def __init__(self):
         self.risk_free_rate = 0.02
 
-    def calculate(self,
-                  portfolio: Portfolio,
-                  history: list[PortfolioSnapshot],
-                  cashflows: list[CashFlow],
-                  risk_free_rate: float = 0.02,
-                  ) -> PortfolioAnalytics:
+    def calculate(
+        self,
+        portfolio: Portfolio,
+        history: list[PortfolioSnapshot],
+        cashflows: list[CashFlow],
+        risk_free_rate: float = 0.02,
+    ) -> PortfolioAnalytics:
         self.risk_free_rate = risk_free_rate
         return PortfolioAnalytics(
             performance=self._performance(
@@ -45,28 +46,26 @@ class AnalyticsService:
     # ---------- Performance ----------
 
     def _performance(
-            self,
-            portfolio: Portfolio,
-            history: list[PortfolioSnapshot],
-            cashflows: list[CashFlow],
+        self,
+        portfolio: Portfolio,
+        history: list[PortfolioSnapshot],
+        cashflows: list[CashFlow],
     ) -> PerformanceMetrics:
 
         return PerformanceMetrics(
-
             daily_return=self._period_return(history, 1),
             weekly_return=self._period_return(history, 5),
             monthly_return=self._period_return(history, 21),
-
-            total_return=portfolio.return_pct,
-
+            total_return=self._total_return(history),
             twr=self._twr(history, cashflows),
-
             xirr=self._xirr(portfolio, cashflows),
         )
 
     # ---------- Risk ----------
 
-    def _risk(self, portfolio: Portfolio, history: list[PortfolioSnapshot]) -> RiskMetrics:
+    def _risk(
+        self, portfolio: Portfolio, history: list[PortfolioSnapshot]
+    ) -> RiskMetrics:
 
         drawdown, max_drawdown = self._drawdown_metrics(history)
         hhi = self._herfindahl(portfolio)
@@ -87,36 +86,35 @@ class AnalyticsService:
 
     # ---------- Allocation ----------
     @staticmethod
-    def _sector_allocation(portfolio):
+    def _sector_allocation(portfolio: Portfolio) -> list[Allocation]:
+        totals: dict[str, float] = {}
 
-        totals = {}
-
-        for p in portfolio.positions:
-            totals.setdefault(
-                p.sector,
-                0,
+        for position in portfolio.positions:
+            totals[position.sector] = (
+                totals.get(position.sector, 0.0) + position.market_value
             )
-            totals[p.sector] += p.market_value
+
+        invested_value = sum(totals.values())
+
+        if invested_value <= 0:
+            return []
 
         return sorted(
             [
                 Allocation(
                     name=sector,
                     value=value,
-                    weight=round(
-                        value / portfolio.total_value * 100,
-                        2,
-                    ),
+                    weight=round(value / invested_value * 100, 2),
                 )
                 for sector, value in totals.items()
             ],
-            key=lambda x: x.weight,
+            key=lambda item: item.weight,
             reverse=True,
         )
 
     @staticmethod
     def _position_allocation(
-            portfolio: Portfolio,
+        portfolio: Portfolio,
     ) -> list[Allocation]:
         return sorted(
             [
@@ -131,15 +129,25 @@ class AnalyticsService:
             reverse=True,
         )
 
+    @staticmethod
+    def _total_return(history: list[PortfolioSnapshot]) -> float:
+        if len(history) < 2:
+            return 0.0
+
+        start_value = history[0].total_value
+        end_value = history[-1].total_value
+
+        if start_value <= 0:
+            return 0.0
+
+        return round((end_value - start_value) / start_value * 100, 2)
+
     # ---------- Helpers ----------
 
     @staticmethod
     def _herfindahl(portfolio):
 
-        weights = [
-            p.weight / 100
-            for p in portfolio.positions
-        ]
+        weights = [p.weight / 100 for p in portfolio.positions]
 
         return round(
             sum(w * w for w in weights),
@@ -175,7 +183,7 @@ class AnalyticsService:
 
         returns = []
 
-        for prev, curr in zip(history[:-1], history[1:]):
+        for prev, curr in zip(history[:-1], history[1:], strict=True):
             prev_value = prev.total_value
             if prev_value == 0:
                 continue
@@ -197,10 +205,7 @@ class AnalyticsService:
 
         return round(annual_vol * 100, 2)
 
-    def _sharpe(
-            self,
-            history: list[PortfolioSnapshot]
-    ) -> float | None:
+    def _sharpe(self, history: list[PortfolioSnapshot]) -> float | None:
 
         returns = self._daily_returns(history)
 
@@ -208,10 +213,7 @@ class AnalyticsService:
             return None
 
         mean_daily = sum(returns) / len(returns)
-        variance = sum(
-            (r - mean_daily) ** 2
-            for r in returns
-        ) / (len(returns) - 1)
+        variance = sum((r - mean_daily) ** 2 for r in returns) / (len(returns) - 1)
 
         daily_vol = math.sqrt(variance)
 
@@ -227,7 +229,9 @@ class AnalyticsService:
         return round(sharpe, 2)
 
     @staticmethod
-    def _drawdown_metrics(history: list[PortfolioSnapshot]) -> tuple[float | None, float | None]:
+    def _drawdown_metrics(
+        history: list[PortfolioSnapshot],
+    ) -> tuple[float | None, float | None]:
         if not history:
             return None, None
 
@@ -266,8 +270,8 @@ class AnalyticsService:
 
     @staticmethod
     def _xirr(
-            portfolio: Portfolio,
-            cashflows: list[CashFlow],
+        portfolio: Portfolio,
+        cashflows: list[CashFlow],
     ) -> float | None:
 
         if not cashflows:
@@ -293,8 +297,8 @@ class AnalyticsService:
 
     @staticmethod
     def _twr(
-            history: list[PortfolioSnapshot],
-            cashflows: list[CashFlow],
+        history: list[PortfolioSnapshot],
+        cashflows: list[CashFlow],
     ) -> float | None:
 
         if len(history) < 2:
@@ -309,20 +313,19 @@ class AnalyticsService:
 
         cumulative = 1.0
 
-        for prev, curr in zip(history[:-1], history[1:]):
-
+        for prev, curr in zip(history[:-1], history[1:], strict=True):
             start = prev.total_value
             end = curr.total_value
 
             flow = flows.get(curr.snapshot_date, 0.0)
 
-            adjusted_end = end - flow
+            adjusted_end = end + flow
 
             if start == 0:
                 continue
 
             period_return = (adjusted_end - start) / start
 
-            cumulative *= (1 + period_return)
+            cumulative *= 1 + period_return
 
         return round((cumulative - 1) * 100, 2)
