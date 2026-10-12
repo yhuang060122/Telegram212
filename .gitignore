@@ -20,3 +20,10 @@ data/*.db-journal
 
 # 工具目录
 .workbuddy/
+
+api_worker/.venv
+api_worker/.venv-workers
+api_worker/.wrangler
+api_worker/python_modules
+api_worker/pylock.toml
+api_worker/uv.lock
