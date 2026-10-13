@@ -1,7 +1,7 @@
 # Trading212 AI Analyst — 项目交接文档
 
 > 文件名：`HANDOFF.ma`
-> 更新时间：2026-10-12
+> 更新时间：2026-10-13
 > 目的：让新会话能够快速恢复项目背景、当前架构决策、完成情况、待办事项与不可重复踩的坑。
 > 说明：本文件是项目交接记录；凡标注“待核实”的内容，都应先检查仓库实际代码、GitHub Actions 运行记录和 Cloudflare
 > 部署状态，不要把规划误当成已经完成。
@@ -101,13 +101,13 @@ Dashboard 使用：
 此前另有一个误创建的 Lovable 项目 `6cbc6d29-71af-4a06-bdf2-c01fb712108c`，正确的空白 Starter 是上面的
 `9bb2927c-09ad-43ef-aad5-380cefef8d59`。不要误用旧项目。
 
-### 2.3 API / Cloudflare Worker：已成功部署，需进一步核验真实端点
+### 2.3 API / Cloudflare Worker：部署与运行已确认正常
 
-用户已明确报告：
+用户已于 2026-10-13 确认：`api_worker` 部署到 Cloudflare Workers 后运行一切正常。
 
-- Cloudflare Worker API 已跑通部署。
-- Worker 在独立的 `api_worker/` 目录。
-- Worker 入口使用 `from app.api.main import app`，即复用现有 FastAPI 应用，而不是再定义一套业务路由。
+- Worker 已成功部署，当前运行正常。
+- Worker 位于独立的 `api_worker/` 目录。
+- 入口复用现有 FastAPI 应用 `app.api.main.app`，不另行定义一套业务路由。
 
 当前适配入口的目标形态：
 
@@ -118,9 +118,9 @@ from workers import asgi
 Default = asgi.entrypoint(app)
 ```
 
-这段入口只做 ASGI 适配，不应该重复定义 `/api/portfolio`、`/api/analytics` 等路由。
+**状态更新：** Cloudflare Python Workers 的运行时/依赖兼容性与当前部署打包方式不再是阻塞项，不需要重复开展大规模兼容性排查。后续只有在修改 Worker 入口、依赖或打包配置时才需要做回归验证。
 
-**待核实**：部署成功不代表所有现有 API、Supabase 查询和全部依赖都在 Cloudflare Python Workers 运行环境正常。必须测试实际只读端点、导入链、依赖和认证。
+下一阶段重点是验证实际 API 端点的响应契约、真实 Supabase 数据、认证/CORS，以及 Dashboard 通过 TanStack Query 完成的端到端真实数据接入。这些是功能与安全验收，不代表 Worker 当前运行异常。
 
 ---
 
@@ -257,37 +257,24 @@ schema。
 
 ## 6. 当前卡点与风险
 
-### 6.1 Worker 部署成功不等于完整后端兼容
+### 6.1 API 端到端验收（Worker 运行已确认正常）
 
-Cloudflare Python Workers 的运行环境与普通 CPython 不完全相同，某些原生扩展或依赖可能不兼容。项目历史依赖包括：
+Worker 已部署且运行正常，Cloudflare Python Workers 的运行时兼容性不是当前卡点。接下来优先验证：
 
-- Supabase Python SDK
-- Pydantic
-- `pyxirr`
-- pandas
-- Google GenAI SDK
-- 其他用于完整 Pipeline 的依赖
+- API 实际注册的路由与 OpenAPI 契约。
+- 真实 Supabase 只读查询、空数据与异常数据场景。
+- Dashboard 使用的 API 路径、响应字段、分页/查询参数（如适用）。
+- 认证/授权、CORS、超时、错误响应和数据更新时间。
+- 从 Dashboard 页面到 TanStack Query hook、API client、Worker、Repository/Service、Supabase 的完整数据链路。
 
-不应该把 `requirements.txt` 所有依赖无差别塞入 Worker。先验证 API 的实际导入链和依赖。尤其要避免 Worker 在 import
-阶段就导入只用于每日分析的重依赖。
+只有在修改 Worker 入口、依赖或打包配置后，才需要把运行时兼容性与打包纳入回归检查。
+ 
+### 6.2 Worker 打包配置（非当前阻塞项）
 
-如果完整依赖不适合 Workers，不要重写全部业务代码；考虑拆出更薄的查询 API、把不兼容部分隔离，或把 FastAPI 放在常规 Python
-托管环境，Cloudflare 继续承担合适的边缘入口能力。
+当前 Worker 已部署并运行正常，因此源码导入和打包不应再被列为当前故障。不要为了这一点重复实施另一套源码复制方案，也不要维护第二份业务代码。
 
-### 6.2 Worker 的源码打包路径
-
-`api_worker/src/main.py` 导入根目录的 `app.api.main` 时，部署包必须包含正确的 `app/` 源码及运行依赖。
-
-之前讨论过在 CI 中把根目录 `app/` 复制到 `api_worker/src/app/`。这只是一个可选的构建策略，并未在此文中认定为已实现。实施前要先确认
-`pywrangler` 的实际打包规则、`main` 配置和当前成功部署方式。
-
-如果采用生成副本策略：
-
-- 源码只在根目录 `app/` 维护。
-- CI 构建时复制。
-- 生成目录加入 `.gitignore`，不要提交第二份业务代码。
-- 测试 Worker 包确实能导入 `app.api.main`。
-
+如果未来修改入口、构建命令、依赖或部署配置，再确认部署产物仍包含正确的 `app/` 源码与运行依赖，并做一次部署后 Smoke Test。业务源码继续只在仓库根目录 `app/` 维护。
+ 
 ### 6.3 Dashboard API 接入
 
 需要核实：
@@ -339,7 +326,7 @@ schema 先检查现有表，避免重复设计。
 1. **不要让 React 直接查询 Supabase。** 统一通过 FastAPI API，业务规则与数据访问留在 Python。
 2. **不要在 Worker 重写一套 API。** 复用 `app/api/`，Worker 入口只负责 ASGI 适配。
 3. **不要把 Worker 当成 Pipeline 执行环境。** 日常采集和 AI 分析继续由现有 GitHub Actions 执行。
-4. **不要未经验证把全部 Python 依赖迁进 Worker。** `pyxirr`、pandas 等必须实际测试兼容性。
+4. **不要把 Worker 依赖兼容性当成当前阻塞项。** 当前部署已由用户确认运行正常；若以后新增/升级依赖，再做针对性回归测试。
 5. **不要在 import 阶段执行昂贵/有副作用的操作。** 不要模块导入时自动同步 Trading212、调用 Gemini、发送 Telegram 或进行数据库写入。
 6. **不要让 routes 直接重做 analytics 计算。** 复用现有 Service / Repository。
 7. **不要在 API 和 Dashboard 两边重复定义业务规则。** API schema 是数据契约，前端负责展示。
@@ -364,9 +351,9 @@ schema 先检查现有表，避免重复设计。
     Node。
 17. **不要盲目相信 GitHub Pages 已部署成功。** 过去 `https://yhuang060122.github.io/Telegram212/` 曾返回 404；部署后要验证
     Pages artifact、base path、路由 fallback 和实际 URL。
-18. **不要因为本地能跑就认为 Worker 能跑。** 本地 CPython 与 Cloudflare Python Workers 运行时有差异。
+18. **不要把已确认正常的 Worker 重新当作未部署状态。** 当前 Worker 已部署且运行正常；仅在入口、依赖或打包配置变更后做针对性回归验证。
 19. **不要把 API Token、Gemini Key、Trading212 Key、Supabase Service Role Key 提交到仓库或前端。**
-20. **不要在 GitHub Actions 中只部署 `api_worker/` 的入口而忘记它导入的根目录 `app/`。** 必须验证部署产物包含源码和运行依赖。
+20. **不要随意改变已正常工作的 Worker 部署打包方式。** 如果确实修改部署配置，再确认部署产物包含所需源码和依赖。
 21. **不要声称 Workflow、Worker 或 Dashboard 功能已完成，除非查看过真实代码/运行结果。** 计划和已验证状态要明确区分。
 
 ### 用户协作方式
@@ -387,7 +374,7 @@ schema 先检查现有表，避免重复设计。
 - [ ] 读取 README、`pyproject.toml`、`requirements.txt`、`app/api/main.py`、实际 routes。
 - [ ] 读取 `api_worker/src/main.py`、`api_worker/pyproject.toml`、`api_worker/wrangler.jsonc`、`uv.lock`（如果存在）。
 - [x] 已确认 `.github/workflows/daily_report.yml` 与 `market_close.yml` 存在。新增 `deploy-api-worker.yml` 后仍需检查运行结果。
-- [ ] 核实 Worker 实际打包是否包含根目录 `app/` 源码，并验证真实 Supabase 只读端点。
+- [ ] 优先检查 Dashboard API client、TanStack Query hooks 和 Overview 页面真实数据接入；Worker 当前部署/运行已确认正常。
 - [ ] 检查 Dashboard 的 API client、TanStack Query hooks、Overview 页面是否接入真实数据。
 - [ ] 用 FastAPI OpenAPI/route 清单核实实际接口，不从历史计划推断接口存在。
 
@@ -418,10 +405,10 @@ schema 先检查现有表，避免重复设计。
 - [ ] 验证一个真实 Supabase 只读端点。
 - [ ] 验证 positions、history、analytics、report 等实际存在的端点。
 - [ ] 检查认证、CORS、超时、错误响应和数据更新时间。
-- [ ] 检查 Worker 依赖兼容性与部署包导入路径。
-- [ ] 为部署增加自动 Smoke Test；失败时不能把“部署命令成功”误认为服务可用。
+- [ ] 只有修改 Worker 入口、依赖或打包配置时，才做对应回归验证；当前不把这项作为阻塞任务。
+- [ ] 为实际 API 端点增加/运行 Smoke Test，检查真实数据与响应契约；部署后验证用于功能回归，不是重新确认 Worker 是否能运行。
 
-### Step 5 — Dashboard 接入
+### Step 5 — Dashboard 真实数据接入与端到端验证（当前重点）
 
 - [ ] 建立/复用集中 API Client。
 - [ ] 统一 API Base URL。
