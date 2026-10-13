@@ -1,0 +1,53 @@
+name: Deploy API Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "api_worker/**"
+      - ".github/workflows/deploy-api-worker.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Validate and deploy Cloudflare Python Worker
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api_worker
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: api_worker/uv.lock
+
+      - name: Validate lockfile
+        run: uv lock --check
+
+      - name: Install Worker dependencies
+        run: uv sync --locked
+
+      - name: Ensure Worker entry imports the shared app
+        run: |
+          grep -q 'from app.api.main import app' src/main.py
+          grep -q 'Default = asgi.entrypoint(app)' src/main.py
+
+      - name: Deploy to Cloudflare
+        run: uv run pywrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
