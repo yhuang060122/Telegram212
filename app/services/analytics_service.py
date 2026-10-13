@@ -2,10 +2,8 @@ from __future__ import annotations
 
 import math
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Literal
-
-from pyxirr import xirr
 
 from app.domain.analytics import (
     Allocation,
@@ -16,6 +14,65 @@ from app.domain.analytics import (
 )
 from app.domain.cashflow import CashFlow
 from app.domain.portfolio import Portfolio, PortfolioSnapshot
+
+
+def _calculate_xirr(
+    dates: list[date],
+    amounts: list[float],
+) -> float | None:
+    """Calculate XIRR using pure Python and bisection."""
+
+    if len(dates) != len(amounts) or len(dates) < 2:
+        return None
+
+    if not (
+        any(amount < 0 for amount in amounts) and any(amount > 0 for amount in amounts)
+    ):
+        return None
+
+    start_date = min(dates)
+    years = [(d - start_date).days / 365.0 for d in dates]
+
+    def npv(rate: float) -> float:
+        return sum(
+            amount / (1.0 + rate) ** year
+            for amount, year in zip(amounts, years, strict=True)
+        )
+
+    # Search for a sign-changing interval above -100%.
+    lower = -0.9999
+    upper = 1.0
+
+    try:
+        f_lower = npv(lower)
+        f_upper = npv(upper)
+
+        for _ in range(60):
+            if f_lower * f_upper <= 0:
+                break
+            upper = upper * 2 + 1
+            f_upper = npv(upper)
+        else:
+            return None
+
+        for _ in range(200):
+            mid = (lower + upper) / 2
+            f_mid = npv(mid)
+
+            if abs(f_mid) < 1e-8:
+                return mid
+
+            if f_lower * f_mid <= 0:
+                upper = mid
+                f_upper = f_mid
+            else:
+                lower = mid
+                f_lower = f_mid
+
+        return (lower + upper) / 2
+
+    except (OverflowError, ZeroDivisionError):
+        return None
 
 
 class AnalyticsService:
@@ -289,8 +346,14 @@ class AnalyticsService:
         amounts.append(portfolio.total_value)
 
         try:
-            rate = xirr(dates, amounts)
-            return round(rate * 100, 2)
+            rate = _calculate_xirr(
+                dates=[cf.datetime.date() for cf in cashflows]
+                + [datetime.now(timezone.utc).date()],
+                amounts=[float(cf.amount) for cf in cashflows]
+                + [float(portfolio.total_value)],
+            )
+
+            return round(rate * 100, 2) if rate is not None else None
 
         except Exception:
             return None

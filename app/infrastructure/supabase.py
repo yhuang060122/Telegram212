@@ -17,12 +17,26 @@ from app.domain.report import Report
 load_dotenv()
 
 
-class SupabaseClient:
+def get_setting(name: str) -> str | None:
+    # Cloudflare Worker secrets / environment bindings
+    try:
+        from workers import env as worker_env
 
+        value = getattr(worker_env, name, None)
+        if value:
+            return str(value)
+    except (ImportError, AttributeError, RuntimeError):
+        pass
+
+    # Local development fallback
+    return os.getenv(name)
+
+
+class SupabaseClient:
     def __init__(self):
 
-        url = os.getenv("SUPABASE_URL")
-        key = os.getenv("SUPABASE_SERVICE_KEY")
+        url = get_setting("SUPABASE_URL")
+        key = get_setting("SUPABASE_SERVICE_KEY")
 
         if not url or not key:
             raise ValueError("SUPABASE_URL or SUPABASE_SERVICE_KEY is missing.")
@@ -34,8 +48,8 @@ class SupabaseClient:
     # ---------------------------------
 
     def save_snapshot(
-            self,
-            portfolio: Portfolio,
+        self,
+        portfolio: Portfolio,
     ):
 
         self.db.table("snapshots").upsert(
@@ -57,8 +71,8 @@ class SupabaseClient:
     # ---------------------------------
 
     def save_positions(
-            self,
-            portfolio: Portfolio,
+        self,
+        portfolio: Portfolio,
     ):
 
         rows = []
@@ -90,8 +104,8 @@ class SupabaseClient:
     # ---------------------------------
 
     def save_news(
-            self,
-            news: list[NewsItem],
+        self,
+        news: list[NewsItem],
     ):
 
         if not news:
@@ -110,15 +124,17 @@ class SupabaseClient:
             for item in news
         ]
 
-        self.db.table("news").upsert(rows, on_conflict="ticker,published_at,url").execute()
+        self.db.table("news").upsert(
+            rows, on_conflict="ticker,published_at,url"
+        ).execute()
 
     # ---------------------------------
     # Earnings
     # ---------------------------------
 
     def save_earnings(
-            self,
-            earnings: list[EarningsEvent],
+        self,
+        earnings: list[EarningsEvent],
     ):
 
         if not earnings:
@@ -137,7 +153,9 @@ class SupabaseClient:
             for e in earnings
         ]
 
-        self.db.table("earnings").upsert(rows, on_conflict="ticker,earnings_date,session").execute()
+        self.db.table("earnings").upsert(
+            rows, on_conflict="ticker,earnings_date,session"
+        ).execute()
 
     # ---------------------------------
     # Macro
@@ -155,23 +173,21 @@ class SupabaseClient:
     # ---------------------------------
 
     def save_report(
-            self,
-            report: Report,
+        self,
+        report: Report,
     ):
 
         self.db.table("reports").upsert(
             {
                 "snapshot_date": date.today().isoformat(),
                 "report": report.model_dump(mode="json"),
-                "overall_sentiment": (
-                    report.portfolio_rating.overall_sentiment
-                ),
+                "overall_sentiment": (report.portfolio_rating.overall_sentiment),
             }
         ).execute()
 
     def save_cashflows(
-            self,
-            cashflows: list[CashFlow],
+        self,
+        cashflows: list[CashFlow],
     ) -> None:
 
         if not cashflows:
@@ -351,11 +367,7 @@ class SupabaseClient:
             start = values[0]["total_value"]
             end = values[-1]["total_value"]
 
-            pct = (
-                (end - start) / start * 100
-                if start
-                else 0
-            )
+            pct = (end - start) / start * 100 if start else 0
 
             result.append(
                 {
@@ -371,21 +383,17 @@ class SupabaseClient:
     def health_check(self) -> bool:
 
         try:
-            self.db.table("snapshots").select(
-                "snapshot_date"
-            ).limit(1).execute()
+            self.db.table("snapshots").select("snapshot_date").limit(1).execute()
             return True
         except Exception:
             return False
 
     def cashflows(
-            self,
-            days: int = 365,
+        self,
+        days: int = 365,
     ) -> list[CashFlow]:
 
-        since = (
-                datetime.utcnow() - timedelta(days=days)
-        ).isoformat()
+        since = (datetime.utcnow() - timedelta(days=days)).isoformat()
 
         result = (
             self.db.table("cashflows")
@@ -409,8 +417,7 @@ class SupabaseClient:
     def latest_cashflow_reference(self) -> str | None:
 
         result = (
-            self.db
-            .table("cashflows")
+            self.db.table("cashflows")
             .select("reference")
             .order("datetime", desc=True)
             .limit(1)
