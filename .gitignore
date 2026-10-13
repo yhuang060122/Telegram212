@@ -1,7 +1,7 @@
 .venv
 .idea
 
-# 环境变量（含 T212 API Key / Secret，切勿提交）
+# Environment variables (never commit secrets)
 .env
 .env.*
 !.env.example
@@ -11,19 +11,23 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 
-# 测试缓存
+# Test caches
 .pytest_cache/
+.coverage
+coverage.xml
 
-# 本地数据库（运行时生成，不入库）
+# Local database (runtime data, not source)
 data/*.db
 data/*.db-journal
+app/scripts/portfolio.db
 
-# 工具目录
+# Tool directories
 .workbuddy/
 
+# Cloudflare Worker local environment / generated artifacts
 api_worker/.venv
 api_worker/.venv-workers
 api_worker/.wrangler
 api_worker/python_modules
 api_worker/pylock.toml
-api_worker/uv.lock
+api_worker/src/app
