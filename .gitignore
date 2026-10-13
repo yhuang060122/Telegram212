@@ -30,3 +30,4 @@ api_worker/.venv-workers
 api_worker/.wrangler
 api_worker/python_modules
 api_worker/pylock.toml
+api_worker/src/app

@@ -2,7 +2,7 @@ name: Deploy API Worker
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
     paths:
       - "app/**"
       - "api_worker/**"
@@ -41,6 +41,7 @@ jobs:
         run: uv sync --locked
 
       - name: Stage shared application source for the Worker build
+        working-directory: api_worker
         run: |
           test -f ../app/api/main.py
           cp -R ../app ./src/app
