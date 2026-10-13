@@ -51,7 +51,7 @@ The API is intended to read persisted data, not trigger a complete collection an
 | Telegram bot and logging | Implemented |
 | Dashboard | Phase 5.1–5.4 reported complete; verify each page against the current branch |
 | FastAPI API | Routes are defined under `app/api/` |
-| Cloudflare Python Worker | Initial deployment path exists; continue validating real database-backed responses, packaging, and security |
+| Cloudflare Python Worker | Deployed and running normally (confirmed by project owner); focus on real API data and end-to-end dashboard validation |
 | End-to-end API → dashboard verification | Remaining validation |
 
 Coverage is enforced by the current pytest configuration in `pyproject.toml` (minimum 80%). The coverage badge is intentionally not hard-coded here because a static badge can become stale; use the latest CI run and coverage artifact as the source of truth.
@@ -145,7 +145,6 @@ Other supported endpoints must be verified against the actual FastAPI route regi
 
 ### API deployment checklist
 
-- [ ] Confirm the Cloudflare Worker deployment bundle includes the root `app/` source and runtime dependencies. The workflow validates the adapter entry and locked dependency install; verify bundling behavior with the first deployment run.
 - [ ] Smoke-test `/api/health` after deployment.
 - [ ] Test each dashboard endpoint against live Supabase-backed data.
 - [ ] Verify response schemas and query parameters against the actual routes.
@@ -153,7 +152,7 @@ Other supported endpoints must be verified against the actual FastAPI route regi
 - [ ] Add authentication/authorization before exposing personal investment data publicly.
 - [ ] Confirm secrets are configured server-side and never included in frontend bundles.
 
-A successful Worker deployment alone does not prove that every route, database query, or dependency works in the Cloudflare Python runtime.
+The project owner has confirmed that the Worker is deployed and running normally. Remaining checks focus on actual endpoint contracts, live database-backed responses, API access control, and dashboard integration. Runtime/dependency compatibility is not a current blocker; re-test it if the Worker entry point, dependencies, or packaging configuration changes.
 
 ## Dashboard
 
@@ -230,7 +229,7 @@ For dashboard work, use Bun as the package manager and follow the lockfile in `d
 
 ### Immediate priorities
 
-1. Validate the live Cloudflare Worker routes and database-backed API responses.
+1. Validate the actual API response contracts against live data, then complete endpoint smoke tests.
 2. Verify dashboard Query hooks use the real API paths and response shapes.
 3. Complete the Overview page's end-to-end API integration, including loading/error/refresh states.
 4. Add API authentication/authorization and verify CORS for the GitHub Pages and Lovable preview origins.
