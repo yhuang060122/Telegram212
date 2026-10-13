@@ -35,8 +35,8 @@ jobs:
           enable-cache: true
           cache-dependency-glob: api_worker/uv.lock
 
-      - name: Validate lockfile
-        run: uv lock --check
+      - name: Generate and validate lockfile
+        run: uv lock
 
       - name: Install Worker dependencies
         run: uv sync --locked
