@@ -41,10 +41,17 @@ jobs:
       - name: Install Worker dependencies
         run: uv sync --locked
 
+      - name: Stage shared application source for the Worker build
+        run: |
+          test -f ../app/api/main.py
+          cp -R ../app ./src/app
+          test -f src/app/api/main.py
+
       - name: Ensure Worker entry imports the shared app
         run: |
           grep -q 'from app.api.main import app' src/main.py
           grep -q 'Default = asgi.entrypoint(app)' src/main.py
+          test -f src/app/api/main.py
 
       - name: Deploy to Cloudflare
         run: uv run pywrangler deploy
