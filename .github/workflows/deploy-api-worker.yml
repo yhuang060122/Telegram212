@@ -33,7 +33,6 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-          cache-dependency-glob: api_worker/uv.lock
 
       - name: Generate and validate lockfile
         run: uv lock
