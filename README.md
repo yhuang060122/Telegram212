@@ -68,7 +68,7 @@ Telegram212/
 │   ├── telegram/            # Telegram handlers, formatting, and bot integration
 │   ├── pipeline.py          # Pipeline orchestration
 │   └── logger.py            # Application logging
-├── api_worker/              # Cloudflare Python Workers adapter and deployment config
+├── api_worker/              # Thin Cloudflare ASGI adapter; reuses app/api/main.py
 ├── dashboard/               # React + TypeScript dashboard
 ├── prompts/                 # AI analyst prompts
 ├── tests/                   # pytest suite
@@ -76,6 +76,7 @@ Telegram212/
 │   ├── ci.yml
 │   ├── daily_report.yml
 │   ├── market_close.yml
+│   ├── deploy-api-worker.yml
 │   └── deploy-pages.yml
 ├── main.py
 ├── close.py
@@ -144,7 +145,7 @@ Other supported endpoints must be verified against the actual FastAPI route regi
 
 ### API deployment checklist
 
-- [ ] Confirm the Cloudflare Worker package includes the required `app/` source and runtime dependencies.
+- [ ] Confirm the Cloudflare Worker deployment bundle includes the root `app/` source and runtime dependencies. The workflow validates the adapter entry and locked dependency install; verify bundling behavior with the first deployment run.
 - [ ] Smoke-test `/api/health` after deployment.
 - [ ] Test each dashboard endpoint against live Supabase-backed data.
 - [ ] Verify response schemas and query parameters against the actual routes.
@@ -177,6 +178,7 @@ The workflows are maintained in `.github/workflows/`:
 - `daily_report.yml`: scheduled daily portfolio analysis/report.
 - `market_close.yml`: market-close snapshot/review.
 - `deploy-pages.yml`: dashboard deployment to GitHub Pages.
+- `deploy-api-worker.yml`: Cloudflare Python Worker validation and deployment; requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets.
 
 Check the Actions page for the latest run status rather than inferring current success from the presence of a workflow file.
 
