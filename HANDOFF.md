@@ -386,7 +386,8 @@ schema 先检查现有表，避免重复设计。
 - [ ] 查看当前 Git 分支、工作区状态、最近提交和未提交修改。
 - [ ] 读取 README、`pyproject.toml`、`requirements.txt`、`app/api/main.py`、实际 routes。
 - [ ] 读取 `api_worker/src/main.py`、`api_worker/pyproject.toml`、`api_worker/wrangler.jsonc`、`uv.lock`（如果存在）。
-- [ ] 检查 `.github/workflows/daily_report.yml`、`market_close.yml`、`deploy-api-worker.yml` 实际内容和最近运行状态。
+- [x] 已确认 `.github/workflows/daily_report.yml` 与 `market_close.yml` 存在。新增 `deploy-api-worker.yml` 后仍需检查运行结果。
+- [ ] 核实 Worker 实际打包是否包含根目录 `app/` 源码，并验证真实 Supabase 只读端点。
 - [ ] 检查 Dashboard 的 API client、TanStack Query hooks、Overview 页面是否接入真实数据。
 - [ ] 用 FastAPI OpenAPI/route 清单核实实际接口，不从历史计划推断接口存在。
 
